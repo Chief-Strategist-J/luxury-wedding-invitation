@@ -3,12 +3,13 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useMusic } from '@/components/music-provider'
 
-export function MusicControl({ visible }: { visible: boolean }) {
-  const { playing, toggle } = useMusic()
+export function MusicControl({ visible }: { visible?: boolean }) {
+  const { playing, toggle, armed } = useMusic()
+  const show = visible ?? armed
 
   return (
     <AnimatePresence>
-      {visible && (
+      {show && (
         <motion.button
           type="button"
           onClick={toggle}

@@ -19,6 +19,8 @@ type MusicContextValue = {
   start: () => void
   /** Toggle on / off — remembers exact playback position */
   toggle: () => void
+  /** Lower the song volume while a video plays, then restore it */
+  duck: (on: boolean) => void
 }
 
 const MusicContext = createContext<MusicContextValue>({
@@ -26,6 +28,7 @@ const MusicContext = createContext<MusicContextValue>({
   armed: false,
   start: () => {},
   toggle: () => {},
+  duck: () => {},
 })
 
 export function useMusic() {
@@ -152,8 +155,16 @@ export function MusicProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, [])
 
+  const duck = useCallback((on: boolean) => {
+    const p = playerRef.current
+    if (!p || !readyRef.current) return
+    try {
+      p.setVolume(on ? 8 : 42)
+    } catch {}
+  }, [])
+
   return (
-    <MusicContext.Provider value={{ playing, armed, start, toggle }}>
+    <MusicContext.Provider value={{ playing, armed, start, toggle, duck }}>
       {/* Hidden, persistent audio source — never remounts, so the song never restarts */}
       <div
         aria-hidden="true"
