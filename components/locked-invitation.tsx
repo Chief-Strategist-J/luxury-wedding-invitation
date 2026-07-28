@@ -93,12 +93,12 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
       transition={{ duration: 0.8 }}
       style={{
         background:
-          'radial-gradient(115% 80% at 50% 8%, oklch(0.995 0.006 90) 0%, oklch(0.955 0.022 235) 42%, oklch(0.885 0.045 238) 100%)',
+          'transparent',
         perspective: '1400px',
       }}
     >
       {/* palace-inspired silhouette (background kept as-is) */}
-      <svg
+      {/* <svg
         aria-hidden="true"
         viewBox="0 0 400 300"
         preserveAspectRatio="xMidYMax slice"
@@ -120,7 +120,7 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
           stroke="oklch(0.86 0.04 238)"
           strokeWidth="1.2"
         />
-      </svg>
+      </svg> */}
 
       <Petals count={16} />
       <Sparkles count={16} />
@@ -154,7 +154,13 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
           transition={{ duration: 3.2, ease: [0.22, 1, 0.36, 1] }}
         >
           {/* ─ square invitation card (no floral corner borders) ─ */}
-          <div className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-2xl border border-accent/35 bg-gradient-to-b from-card via-secondary/40 to-card px-6 py-8 shadow-[0_40px_90px_-40px_oklch(0.55_0.07_240/0.55)]">
+          <div
+            className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-2xl border border-accent/35 px-6 py-8 shadow-[0_40px_90px_-40px_oklch(0.55_0.07_240/0.55)]"
+            style={{
+              background:
+                'radial-gradient(115% 80% at 50% 8%, oklch(0.995 0.006 90) 0%, oklch(0.955 0.022 235) 42%, oklch(0.885 0.045 238) 100%)',
+            }}
+          >
             {/* soft glow behind the heart lock */}
             <div
               aria-hidden="true"
@@ -227,7 +233,7 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
             </div>
           </div>
 
-          {/* ─ card cover that swings open in 3D ─ */}
+          {/* ─ card cover that swings open in 3D — shows the A&K heart lock unlocking + the same message ─ */}
           <AnimatePresence>
             {opening && (
               <motion.div
@@ -238,14 +244,16 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
                 transition={{ duration: 2.1, delay: 0.55, ease: [0.65, 0, 0.35, 1] }}
                 style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' }}
               >
-                <div className="flex h-full items-center justify-center">
-                  <svg viewBox="0 0 32 32" className="size-24" aria-hidden="true">
-                    <path
-                      d="M16 28S3 20.4 3 11.9C3 7.5 6.3 4.5 10.2 4.5c2.6 0 4.6 1.4 5.8 3.3 1.2-1.9 3.2-3.3 5.8-3.3C25.7 4.5 29 7.5 29 11.9 29 20.4 16 28 16 28z"
-                      fill="oklch(0.99 0.008 90 / 0.9)"
-                      stroke="var(--gold-soft)"
-                    />
-                  </svg>
+                <div className="flex h-full flex-col items-center justify-center gap-5 px-6 text-center">
+                  <OpeningHeartLock />
+                  <motion.p
+                    className="font-serif text-[1.35rem] font-light italic leading-snug text-foreground/85"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: 0.9, duration: 0.9 }}
+                  >
+                    A Beautiful Story Awaits...
+                  </motion.p>
                 </div>
               </motion.div>
             )}
@@ -287,10 +295,10 @@ function HeartLock({ opening }: { opening: boolean }) {
             fill="url(#heartGold)"
             stroke="oklch(0.7 0.09 74 / 0.7)"
             strokeWidth="1.2"
-            style={{
-              filter:
-                'drop-shadow(0 12px 22px oklch(0.6 0.09 74 / 0.55))',
-            }}
+            // style={{
+            //   filter:
+            //     'drop-shadow(0 12px 22px oklch(0.6 0.09 74 / 0.55))',
+            // }}
           />
           {/* inner outline */}
           <path
@@ -334,6 +342,90 @@ function HeartLock({ opening }: { opening: boolean }) {
           />
         </svg>
       </div>
+    </div>
+  )
+}
+
+/* ── A&K heart lock shown inside the flap while it swings open — shackle springs undone ── */
+function OpeningHeartLock() {
+  return (
+    <div className="relative flex flex-col items-center">
+      {/* soft glow */}
+      <div
+        aria-hidden="true"
+        className="absolute left-1/2 top-1/2 size-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+        style={{
+          background: 'radial-gradient(circle, oklch(0.93 0.06 88 / 0.55), transparent 70%)',
+        }}
+      />
+
+      {/* shackle popping open */}
+      <motion.div
+        className="relative z-0 h-8 w-10 rounded-t-full border-[4px] border-b-0"
+        style={{
+          borderColor: 'oklch(0.82 0.09 82)',
+          boxShadow: 'inset 0 2px 3px oklch(1 0 0 / 0.7)',
+          transformOrigin: 'right bottom',
+        }}
+        initial={{ rotate: 0, x: 0, y: 0 }}
+        animate={{ rotate: [0, -12, -55], x: [0, 2, 8], y: [0, -1, -6] }}
+        transition={{ duration: 1.1, delay: 0.3, times: [0, 0.35, 1], ease: 'easeInOut' }}
+      />
+
+      {/* heart body */}
+      <motion.div
+        className="relative -mt-1.5 size-24"
+        initial={{ scale: 0.9, opacity: 0.6 }}
+        animate={{ scale: [0.9, 1.08, 1], opacity: 1 }}
+        transition={{ duration: 1.2, delay: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+      >
+        <svg viewBox="0 0 100 100" className="size-full" aria-hidden="true">
+          <defs>
+            <linearGradient id="openingHeartGold" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="oklch(0.97 0.05 90)" />
+              <stop offset="45%" stopColor="oklch(0.86 0.09 82)" />
+              <stop offset="100%" stopColor="oklch(0.74 0.1 74)" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M50 92S8 66 8 38.5C8 24 18.5 15 30 15c8.5 0 15.5 4.8 20 12 4.5-7.2 11.5-12 20-12 11.5 0 22 9 22 23.5C92 66 50 92 50 92z"
+            fill="url(#openingHeartGold)"
+            stroke="oklch(0.7 0.09 74 / 0.7)"
+            strokeWidth="1.2"
+          />
+          <path
+            d="M50 84S16 62 16 39.5C16 28.5 24 21.5 32 21.5c6.5 0 12 4 18 11 6-7 11.5-11 18-11 8 0 16 7 16 18C84 62 50 84 50 84z"
+            fill="none"
+            stroke="oklch(1 0 0 / 0.55)"
+            strokeWidth="1"
+          />
+          <ellipse
+            cx="34"
+            cy="35"
+            rx="9"
+            ry="6"
+            fill="oklch(1 0 0 / 0.45)"
+            transform="rotate(-25 34 35)"
+          />
+          <text
+            x="50"
+            y="58"
+            textAnchor="middle"
+            fontFamily="'Cormorant Garamond', serif"
+            fontSize="27"
+            fill="oklch(0.42 0.06 68)"
+            letterSpacing="1"
+          >
+            A
+            <tspan fontSize="17" fill="oklch(0.55 0.07 70)" dx="1">
+              &amp;
+            </tspan>
+            <tspan dx="1">K</tspan>
+          </text>
+          {/* keyhole open (no bottom stem — unlocked look) */}
+          <circle cx="50" cy="68" r="3.2" fill="oklch(0.55 0.07 70)" />
+        </svg>
+      </motion.div>
     </div>
   )
 }

@@ -96,7 +96,7 @@ function DateCountdown() {
     >
       <p
         className="text-[0.58rem] uppercase tracking-[0.34em]"
-        style={{ color: 'oklch(0.62 0.1 16)' }}
+        style={{ color: 'oklch(0.55 0.07 70)' }}
       >
         Counting Every Heartbeat
       </p>
@@ -109,21 +109,21 @@ function DateCountdown() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.45 + i * 0.09, duration: 0.6 }}
             style={{
-              borderColor: 'oklch(0.86 0.06 16 / 0.8)',
+              borderColor: 'oklch(0.82 0.09 82 / 0.8)',
               background:
-                'linear-gradient(160deg, oklch(1 0 0 / 0.78), oklch(0.96 0.03 16 / 0.6))',
-              boxShadow: '0 10px 24px -18px oklch(0.6 0.12 16 / 0.85)',
+                'linear-gradient(160deg, oklch(1 0 0 / 0.78), oklch(0.93 0.05 84 / 0.6))',
+              boxShadow: '0 10px 24px -18px oklch(0.6 0.09 74 / 0.75)',
             }}
           >
             <span
               className="font-serif text-xl font-light leading-none tabular-nums sm:text-2xl"
-              style={{ color: 'oklch(0.42 0.12 16)' }}
+              style={{ color: 'oklch(0.42 0.06 68)' }}
             >
               {String(c.v).padStart(2, '0')}
             </span>
             <span
               className="mt-1 text-[0.44rem] uppercase tracking-[0.22em]"
-              style={{ color: 'oklch(0.63 0.09 16)' }}
+              style={{ color: 'oklch(0.55 0.07 70)' }}
             >
               {c.l}
             </span>
@@ -202,7 +202,7 @@ export function ScratchReveal({
         >
           <p className="font-serif text-[2rem] font-light leading-tight text-foreground drop-shadow-[0_2px_10px_oklch(1_0_0/0.7)] sm:text-4xl">
             {wedding.groom}
-            <span className="mx-2" style={{ color: 'oklch(0.74 0.13 14)' }}>
+            <span className="mx-2" style={{ color: 'oklch(0.74 0.1 76)' }}>
               &hearts;
             </span>
             {wedding.bride}
@@ -279,7 +279,7 @@ function HeartScratch({
   const tick = useRef(0)
   const [progress, setProgress] = useState(0)
 
-  /* rose-gold foil, clipped to the heart by the CSS mask */
+  /* golden foil, clipped to the heart by the CSS mask — matches the lock theme */
   const paint = useCallback(
     (canvas: HTMLCanvasElement) => {
       const ctx = canvas.getContext('2d')
@@ -287,10 +287,10 @@ function HeartScratch({
       const { width: w, height: h } = canvas
       ctx.globalCompositeOperation = 'source-over'
       const g = ctx.createLinearGradient(0, 0, w, h)
-      g.addColorStop(0, '#f6dfe0')
-      g.addColorStop(0.35, '#f2c9cd')
-      g.addColorStop(0.6, '#eebfb6')
-      g.addColorStop(1, '#e6c79a')
+      g.addColorStop(0, '#faf1d8')
+      g.addColorStop(0.35, '#f0dba8')
+      g.addColorStop(0.6, '#e6c589')
+      g.addColorStop(1, '#d3a95f')
       ctx.fillStyle = g
       ctx.fillRect(0, 0, w, h)
 
@@ -305,7 +305,7 @@ function HeartScratch({
         const r = 1.4 + rand(i + 3.1) * 3.4
         const halo = ctx.createRadialGradient(x, y, 0, x, y, r * 3.4)
         halo.addColorStop(0, `rgba(255,255,255,${0.5 + rand(i + 5.7) * 0.4})`)
-        halo.addColorStop(0.45, 'rgba(255,246,240,0.24)')
+        halo.addColorStop(0.45, 'rgba(255,248,232,0.24)')
         halo.addColorStop(1, 'rgba(255,255,255,0)')
         ctx.fillStyle = halo
         ctx.beginPath()
@@ -334,7 +334,7 @@ function HeartScratch({
       c.textAlign = 'center'
       c.letterSpacing = '3px'
       c.font = `500 ${Math.max(8, Math.round(w * 0.085))}px Jost, sans-serif`
-      c.fillStyle = 'rgba(140,80,80,0.7)'
+      c.fillStyle = 'rgba(120,88,42,0.72)'
       c.fillText(label.toUpperCase(), w / 2, h * 0.52)
     },
     [label],
@@ -372,8 +372,8 @@ function HeartScratch({
   }, [])
 
   useEffect(() => {
-    /* half the foil is enough — the rest opens on its own */
-    if (!opened && progress >= 0.5) onOpen()
+    /* just a couple of strokes anywhere on the heart is enough — the rest opens on its own */
+    if (!opened && progress >= 0.12) onOpen()
   }, [progress, opened, onOpen])
 
   const scratch = useCallback((x: number, y: number) => {
@@ -414,8 +414,8 @@ function HeartScratch({
       animate={{
         opacity: 1,
         y: 0,
-        /* the heart grows a little once its number is revealed */
-        scale: opened ? 1.16 : 1,
+        /* the heart grows just a touch once its number is revealed */
+        scale: opened ? 1.06 : 1,
       }}
       transition={{ delay, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
     >
@@ -423,7 +423,7 @@ function HeartScratch({
       <motion.div
         className="relative"
         animate={{
-          scale: opened ? [1, 1.09, 1.005, 1.06, 1] : [1, 1.045, 1.005, 1.03, 1],
+          scale: opened ? [1, 1.06, 1.005, 1.04, 1] : [1, 1.045, 1.005, 1.03, 1],
         }}
         transition={{
           duration: opened ? 1.25 : 1.6,
@@ -440,7 +440,7 @@ function HeartScratch({
         animate={{ opacity: opened ? 0.85 : 0.35 }}
         style={{
           background:
-            'radial-gradient(closest-side, oklch(0.9 0.08 16 / 0.75), transparent)',
+            'radial-gradient(closest-side, oklch(0.93 0.06 88 / 0.6), transparent)',
         }}
       />
 
@@ -461,7 +461,7 @@ function HeartScratch({
           className="absolute inset-0 flex flex-col items-center justify-center pb-3"
           style={{
             background:
-              'linear-gradient(155deg, oklch(0.98 0.02 18), oklch(0.93 0.055 16) 55%, oklch(0.87 0.09 14))',
+              'linear-gradient(155deg, oklch(0.97 0.05 90), oklch(0.86 0.09 82) 55%, oklch(0.74 0.1 74))',
           }}
         >
           <span
@@ -470,13 +470,13 @@ function HeartScratch({
                 ? 'font-serif text-xl font-medium tracking-[0.06em] sm:text-2xl'
                 : 'font-serif text-2xl font-light sm:text-3xl'
             }
-            style={{ color: 'oklch(0.42 0.12 16)' }}
+            style={{ color: 'oklch(0.42 0.06 68)' }}
           >
             {value}
           </span>
           <span
             className="mt-0.5 text-[0.45rem] uppercase tracking-[0.24em]"
-            style={{ color: 'oklch(0.6 0.1 16)' }}
+            style={{ color: 'oklch(0.55 0.07 70)' }}
           >
             {label}
           </span>
@@ -495,6 +495,7 @@ function HeartScratch({
             last.current = null
             const p = pointFrom(e)
             scratch(p.x, p.y)
+            measure()
           }}
           onPointerMove={(e) => {
             if (!drawing.current) return
@@ -525,7 +526,7 @@ function HeartScratch({
         <path
           d={HEART_PATH}
           fill="none"
-          stroke="oklch(0.78 0.11 14 / 0.9)"
+          stroke="oklch(0.7 0.09 74 / 0.85)"
           strokeWidth="1.6"
         />
       </svg>
@@ -545,14 +546,14 @@ function HeartScratch({
               transition={{ duration: 1.4, ease: 'easeOut' }}
               style={{
                 background:
-                  'radial-gradient(circle at 50% 50%, oklch(0.95 0.06 18 / 0.95), transparent 65%)',
+                  'radial-gradient(circle at 50% 50%, oklch(0.93 0.07 88 / 0.9), transparent 65%)',
               }}
             />
             {Array.from({ length: 10 }).map((_, i) => (
               <motion.span
                 key={i}
                 className="absolute left-1/2 top-1/2 text-[0.6rem]"
-                style={{ color: i % 2 ? 'oklch(0.75 0.14 14)' : 'var(--gold)' }}
+                style={{ color: i % 2 ? 'oklch(0.8 0.1 80)' : 'var(--gold)' }}
                 initial={{ x: 0, y: 0, opacity: 1, scale: 0.5 }}
                 animate={{
                   x: Math.cos((i / 10) * Math.PI * 2) * (44 + (i % 3) * 12),

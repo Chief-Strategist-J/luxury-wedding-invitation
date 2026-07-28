@@ -85,11 +85,11 @@ export function CoupleReveal() {
             </motion.div>
           </div>
 
-          <FloralSprig className="absolute -left-10 bottom-0 w-32 opacity-90 sm:-left-16 sm:w-44" />
+          {/* <FloralSprig className="absolute -left-10 bottom-0 w-32 opacity-90 sm:-left-16 sm:w-44" />
           <FloralSprig
             flip
             className="absolute -right-10 bottom-0 w-32 opacity-90 sm:-right-16 sm:w-44"
-          />
+          /> */}
         </div>
 
         {/* names */}
@@ -112,15 +112,25 @@ export function CoupleReveal() {
 
           <GoldDivider className="mt-7" />
 
-          <motion.p
-            className="mt-6 text-sm font-medium uppercase tracking-[0.4em] text-gold-gradient sm:text-base"
+          <motion.div
+            className="mt-6 flex justify-center"
             initial={{ opacity: 0, y: 12 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 1.3, duration: 0.9 }}
           >
-            {wedding.hashtag}
-          </motion.p>
+            <span
+              className="inline-flex items-center rounded-full border border-accent/40 px-5 py-2 shadow-[0_8px_24px_-10px_oklch(0.7_0.09_82/0.6)] sm:px-6 sm:py-2.5"
+              style={{
+                background:
+                  'linear-gradient(180deg, oklch(0.97 0.03 88 / 0.9) 0%, oklch(0.92 0.05 84 / 0.7) 100%)',
+              }}
+            >
+              <span className="text-sm font-medium uppercase tracking-[0.4em] text-gold-gradient sm:text-base">
+                {wedding.hashtag}
+              </span>
+            </span>
+          </motion.div>
 
           <motion.p
             className="mx-auto mt-6 max-w-md text-pretty text-sm leading-relaxed text-muted-foreground"
