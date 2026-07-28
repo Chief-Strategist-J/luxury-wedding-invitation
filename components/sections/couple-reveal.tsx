@@ -1,7 +1,6 @@
 'use client'
 
 import { motion } from 'motion/react'
-import Image from 'next/image'
 import {
   Eyebrow,
   FloralSprig,
@@ -65,22 +64,49 @@ export function CoupleReveal() {
               transition={{ duration: 1.2, ease: [0.22, 1, 0.36, 1] }}
             >
               <div className="relative aspect-[3/4.1] w-full">
-                <Image
-                  src="/media/couple-portrait.png"
-                  alt={`${wedding.groomFull} in an ivory sherwani and ${wedding.brideFull} in a blush pink bridal lehenga`}
-                  fill
-                  priority
-                  sizes="(max-width: 640px) 100vw, 460px"
-                  className="object-cover"
+                {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
+                <video
+                  className="absolute inset-0 size-full object-cover"
+                  src="/media/Bride_and_groom_enter_palace_202607290130.mp4"
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="auto"
+                  aria-hidden="true"
                 />
-                <div
+
+                {/* readability gradient so the overlaid text stays legible on any frame */}
+               <div
                   aria-hidden="true"
                   className="absolute inset-0"
                   style={{
                     background:
-                      'linear-gradient(180deg, transparent 45%, oklch(0.97 0.02 235 / 0.85) 100%)',
+                      'linear-gradient(180deg, oklch(0.1 0.02 240 / 0.55) 0%, transparent 35%, transparent 60%, oklch(0.1 0.02 240 / 0.05) 100%)',
                   }}
                 />
+
+               {/* new-beginning text, overlaid directly on the video, fading in at the top */}
+                <div className="absolute inset-x-0 top-0 flex flex-col items-center gap-2 px-4 pt-6 text-center">
+                  <motion.p
+                    className="font-serif text-2xl font-light italic leading-tight text-white drop-shadow-[0_2px_10px_oklch(0.1_0.02_240/0.6)] sm:text-3xl"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.6, duration: 1.1 }}
+                  >
+                    A New Beginning
+                  </motion.p>
+                  <motion.span
+                    className="text-[0.65rem] font-medium uppercase tracking-[0.35em] text-[oklch(0.92_0.06_86)] drop-shadow-[0_2px_8px_oklch(0.1_0.02_240/0.6)] sm:text-xs"
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ delay: 0.9, duration: 1.1 }}
+                  >
+                    Two Hearts, One Journey
+                  </motion.span>
+                </div>
               </div>
             </motion.div>
           </div>

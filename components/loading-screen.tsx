@@ -22,13 +22,14 @@ export function LoadingScreen({ onDone }: { onDone: () => void }) {
     >
       <Sparkles count={22} />
 
-      {/* Elegant golden floral bloom */}
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 200 200"
-        className="size-36 sm:size-44"
-        fill="none"
-      >
+    {/* Elegant golden floral bloom */}
+      <div className="relative mx-auto flex size-36 items-center justify-center sm:size-44">
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 200 200"
+          className="absolute inset-0 size-full"
+          fill="none"
+        >
         {[0, 60, 120, 180, 240, 300].map((deg, i) => (
           <motion.ellipse
             key={deg}
@@ -62,7 +63,7 @@ export function LoadingScreen({ onDone }: { onDone: () => void }) {
         <motion.circle
           cx="100"
           cy="100"
-          r="62"
+          r="78"
           stroke="var(--gold)"
           strokeWidth="0.8"
           strokeDasharray="2 7"
@@ -75,6 +76,7 @@ export function LoadingScreen({ onDone }: { onDone: () => void }) {
           style={{ transformOrigin: '100px 100px' }}
         />
       </svg>
+      </div>
 
       <motion.p
         className="mt-8 px-8 text-center font-serif text-2xl font-light italic tracking-wide text-foreground/85 sm:text-3xl"

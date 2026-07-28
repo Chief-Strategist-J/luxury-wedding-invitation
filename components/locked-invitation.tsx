@@ -97,31 +97,6 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
         perspective: '1400px',
       }}
     >
-      {/* palace-inspired silhouette (background kept as-is) */}
-      {/* <svg
-        aria-hidden="true"
-        viewBox="0 0 400 300"
-        preserveAspectRatio="xMidYMax slice"
-        className="absolute inset-x-0 bottom-0 h-[62%] w-full opacity-[0.45]"
-        fill="none"
-      >
-        <path
-          d="M40 300V150c0-30 26-54 60-54s60 24 60 54v150M240 300V150c0-30 26-54 60-54s60 24 60 54v150"
-          stroke="oklch(0.82 0.05 238)"
-          strokeWidth="1.4"
-        />
-        <path
-          d="M100 96c0-26 0-40 0-52 0 12 0 26 0 52M300 96c0-26 0-40 0-52 0 12 0 26 0 52"
-          stroke="var(--gold-soft)"
-          strokeWidth="1.4"
-        />
-        <path
-          d="M170 300V180c0-16 13-30 30-30s30 14 30 30v120"
-          stroke="oklch(0.86 0.04 238)"
-          strokeWidth="1.2"
-        />
-      </svg> */}
-
       <Petals count={16} />
       <Sparkles count={16} />
       {sparkleLayer}
@@ -142,20 +117,21 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
         )}
       </AnimatePresence>
 
-      <div className="relative z-20 flex h-full items-center justify-center px-5 py-8">
+      {/* wider side padding here (px-8) is what gives the card real breathing room on phones */}
+      <div className="relative z-20 flex h-full items-center justify-center px-8 py-8">
         <motion.div
-          className="relative w-full max-w-sm"
+          className="relative w-full max-w-[19rem]"
           style={{ transformStyle: 'preserve-3d' }}
           animate={
             opening
-              ? { scale: [1, 1.04, 1.35], y: [0, -6, -20], rotateX: [0, 2, 8] }
+              ? { scale: [1, 1.03, 1.12], y: [0, -4, -10], rotateX: [0, 2, 6] }
               : {}
           }
           transition={{ duration: 3.2, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* ─ square invitation card (no floral corner borders) ─ */}
+          {/* ─ invitation card — natural height instead of a forced square, so it isn't overly tall ─ */}
           <div
-            className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-2xl border border-accent/35 px-6 py-8 shadow-[0_40px_90px_-40px_oklch(0.55_0.07_240/0.55)]"
+            className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-accent/35 px-8 py-9 shadow-[0_40px_90px_-40px_oklch(0.55_0.07_240/0.55)]"
             style={{
               background:
                 'radial-gradient(115% 80% at 50% 8%, oklch(0.995 0.006 90) 0%, oklch(0.955 0.022 235) 42%, oklch(0.885 0.045 238) 100%)',
@@ -164,7 +140,7 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
             {/* soft glow behind the heart lock */}
             <div
               aria-hidden="true"
-              className="absolute left-1/2 top-[38%] size-52 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+              className="absolute left-1/2 top-[34%] size-48 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
               style={{
                 background:
                   'radial-gradient(circle, oklch(0.93 0.06 88 / 0.6), transparent 70%)',
@@ -181,19 +157,17 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
                 className="relative block rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent/70"
                 style={{ transformStyle: 'preserve-3d' }}
                 whileTap={{ scale: 0.94 }}
-                animate={
+                 animate={
                   opening
                     ? {
-                        rotateY: [0, 180, 380],
-                        rotateZ: [0, 8, -4],
-                        scale: [1, 1.14, 0.85],
-                        opacity: [1, 1, 0],
+                        scale: [1, 1.1, 1.05, 0.96],
+                        y: [0, -4, -4, -8],
                       }
                     : { y: [0, -7, 0], scale: [1, 1.03, 1] }
                 }
                 transition={
                   opening
-                    ? { duration: 2.2, ease: [0.65, 0, 0.35, 1] }
+                    ? { duration: 2.2, times: [0, 0.35, 0.75, 1], ease: [0.65, 0, 0.35, 1] }
                     : {
                         duration: 3.4,
                         repeat: Number.POSITIVE_INFINITY,
@@ -205,8 +179,8 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
               </motion.button>
             </div>
 
-            <div className="relative mt-7 text-center">
-              <p className="font-serif text-[1.5rem] font-light italic leading-snug text-foreground/85">
+            <div className="relative mt-6 text-center">
+              <p className="font-serif text-[1.4rem] font-light italic leading-snug text-foreground/85">
                 A Beautiful Story Awaits...
               </p>
               <GoldDivider className="mt-4" />
@@ -269,15 +243,23 @@ function HeartLock({ opening }: { opening: boolean }) {
   return (
     <div className="relative flex flex-col items-center">
       {/* shackle */}
-      <motion.div
+     <motion.div
         className="relative z-0 h-9 w-12 rounded-t-full border-[5px] border-b-0"
         style={{
           borderColor: 'oklch(0.82 0.09 82)',
           boxShadow: 'inset 0 2px 3px oklch(1 0 0 / 0.7)',
           transformOrigin: 'right bottom',
         }}
-        animate={opening ? { rotate: -38, x: 6, y: -3 } : { rotate: 0 }}
-        transition={{ duration: 0.8, delay: 0.9, ease: 'backOut' }}
+        animate={
+          opening
+            ? { rotate: [0, -14, -60], x: [0, 2, 9], y: [0, -1, -7] }
+            : { rotate: 0, x: 0, y: 0 }
+        }
+        transition={
+          opening
+            ? { duration: 1, delay: 0.15, times: [0, 0.35, 1], ease: 'easeInOut' }
+            : { duration: 0.4 }
+        }
       />
 
       {/* heart body */}
@@ -295,10 +277,6 @@ function HeartLock({ opening }: { opening: boolean }) {
             fill="url(#heartGold)"
             stroke="oklch(0.7 0.09 74 / 0.7)"
             strokeWidth="1.2"
-            // style={{
-            //   filter:
-            //     'drop-shadow(0 12px 22px oklch(0.6 0.09 74 / 0.55))',
-            // }}
           />
           {/* inner outline */}
           <path

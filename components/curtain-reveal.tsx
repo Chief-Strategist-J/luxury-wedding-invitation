@@ -1,16 +1,61 @@
 'use client'
 
-import { motion } from 'motion/react'
-import { useEffect } from 'react'
+import { motion, AnimatePresence } from 'motion/react'
+import { useEffect, useState } from 'react'
 import Image from 'next/image'
 import { Petals, Sparkles } from '@/components/decor'
 
-/** Screen 4: luxurious 3D silk curtains parting over a mandap scene. */
+const NAMAH = 'श्री गणेशाय नमः ॥'
+const SHLOK_LINE_1 = 'वक्रतुण्ड महाकाय सूर्यकोटि समप्रभ।'
+const SHLOK_LINE_2 = 'निर्विघ्नं कुरु मे देव सर्वकार्येषु सर्वदा॥'
+const TAGLINE = 'One Beautiful Story...'
+
+/**
+ * Reveal: fades a whole line of text in at once (NOT a letter-by-letter typewriter).
+ * Calls onDone once the fade-in finishes, so the sequencing logic below still works.
+ */
+function Reveal({
+  text,
+  duration = 0.9,
+  startDelay = 0,
+  className,
+  onDone,
+}: {
+  text: string
+  duration?: number
+  startDelay?: number
+  className?: string
+  onDone?: () => void
+}) {
+  return (
+    <motion.span
+      className={className}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration, delay: startDelay / 1000, ease: [0.22, 1, 0.36, 1] }}
+      onAnimationComplete={onDone}
+    >
+      {text}
+    </motion.span>
+  )
+}
+
+type Phase = 'namah' | 'image' | 'line1' | 'line2' | 'tagline'
+
+/** Screen 4: a decorative template with the Ganesh invocation, faded in on screen. */
 export function CurtainReveal({ onDone }: { onDone: () => void }) {
+  const [phase, setPhase] = useState<Phase>('namah')
+
   useEffect(() => {
-    const t = setTimeout(onDone, 6600)
+    // shorter now that there's no per-letter typing delay to wait through
+    const t = setTimeout(onDone, 7000)
     return () => clearTimeout(t)
   }, [onDone])
+
+  const showImage = phase !== 'namah'
+  const showLine1 = phase === 'line1' || phase === 'line2' || phase === 'tagline'
+  const showLine2 = phase === 'line2' || phase === 'tagline'
+  const showTagline = phase === 'tagline'
 
   return (
     <motion.div
@@ -18,16 +63,11 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
       exit={{ opacity: 0, scale: 1.06 }}
       transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* ── behind the curtains: luxury mandap environment ── */}
-      <motion.div
-        className="absolute inset-0"
-        initial={{ scale: 1.18 }}
-        animate={{ scale: 1 }}
-        transition={{ duration: 6.5, ease: 'easeOut' }}
-      >
+      {/* blank decorative template as the full background */}
+      <div className="absolute inset-0">
         <Image
-          src="/media/mandap.png"
-          alt="A luxurious Indian wedding mandap decorated with white and blue flowers and golden lamps"
+          src="/media/balnk-templates.png"
+          alt="Decorative wedding invitation background"
           fill
           priority
           sizes="100vw"
@@ -38,142 +78,101 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
           className="absolute inset-0"
           style={{
             background:
-              'linear-gradient(180deg, oklch(0.99 0.008 90 / 0.35) 0%, transparent 40%, oklch(0.9 0.04 238 / 0.45) 100%)',
+              'linear-gradient(180deg, oklch(0.99 0.008 90 / 0.15) 0%, transparent 35%, oklch(0.9 0.04 238 / 0.35) 100%)',
           }}
         />
-        {/* golden hanging lamps */}
-        {[18, 38, 62, 82].map((left, i) => (
-          <motion.div
-            key={left}
-            className="absolute top-0 flex flex-col items-center"
-            style={{ left: `${left}%` }}
-            initial={{ y: -80, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 1.6 + i * 0.2, duration: 1.4, ease: 'easeOut' }}
-          >
-            <span className="h-16 w-px bg-accent/60 sm:h-24" />
-            <span
-              className="size-5 rounded-full"
-              style={{
-                background:
-                  'radial-gradient(circle at 35% 30%, oklch(0.99 0.05 92), oklch(0.82 0.1 80))',
-                boxShadow: '0 0 22px 6px oklch(0.9 0.08 88 / 0.6)',
-                animation: 'gentle-float 4s ease-in-out infinite',
-              }}
-            />
-          </motion.div>
-        ))}
-        <Petals count={18} />
-        <Sparkles count={20} />
-      </motion.div>
-
-      {/* ── the words ── */}
-      <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 px-6 text-center">
-        <motion.p
-          className="font-serif text-3xl font-light italic text-foreground drop-shadow-[0_2px_10px_oklch(1_0_0/0.8)] sm:text-5xl"
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: [0, 1, 1, 0], y: [18, 0, 0, -10] }}
-          transition={{ duration: 3, times: [0, 0.25, 0.75, 1], delay: 0.6 }}
-        >
-          Two Hearts...
-        </motion.p>
-        <motion.p
-          className="absolute font-serif text-3xl font-light italic text-foreground drop-shadow-[0_2px_10px_oklch(1_0_0/0.8)] sm:text-5xl"
-          initial={{ opacity: 0, y: 18 }}
-          animate={{ opacity: [0, 1, 1], y: [18, 0, 0] }}
-          transition={{ duration: 2.6, delay: 3.6, ease: 'easeOut' }}
-        >
-          One Beautiful Story...
-        </motion.p>
+        <Petals count={16} />
+        <Sparkles count={18} />
       </div>
 
-      {/* ── curtains ── */}
-      {(['left', 'right'] as const).map((side) => (
-        <motion.div
-          key={side}
-          className="absolute inset-y-0 z-40 w-1/2"
-          style={{
-            [side]: 0,
-            transformOrigin: side === 'left' ? 'left center' : 'right center',
-            background:
-              'radial-gradient(115% 80% at 50% 8%, oklch(0.995 0.006 90) 0%, oklch(0.955 0.022 235) 42%, oklch(0.885 0.045 238) 100%)',
-            boxShadow:
-              side === 'left'
-                ? '18px 0 50px -14px oklch(0.55 0.06 240 / 0.5)'
-                : '-18px 0 50px -14px oklch(0.55 0.06 240 / 0.5)',
-          }}
-          initial={{ x: 0, scaleX: 1 }}
-          animate={{
-            x: side === 'left' ? '-102%' : '102%',
-            scaleX: [1, 0.94, 0.88],
-          }}
-          transition={{ duration: 4.2, delay: 2.1, ease: [0.76, 0, 0.24, 1] }}
-        >
-          {/* gold trim */}
-          <div
-            aria-hidden="true"
-            className={`absolute inset-y-0 w-2 ${side === 'left' ? 'right-0' : 'left-0'}`}
-            style={{
-              background:
-                'linear-gradient(180deg, var(--gold), var(--gold-soft), var(--gold))',
-            }}
-          />
-          <div
-            aria-hidden="true"
-            className="absolute inset-x-0 top-0 h-8"
-            style={{
-              background:
-                'linear-gradient(180deg, oklch(0.84 0.08 82), oklch(0.93 0.05 88 / 0.4))',
-            }}
-          />
-        </motion.div>
-      ))}
+      {/* content anchored near the top (not dead-center) so there's no big empty gap above the namah line */}
+      <div className="relative z-30 flex h-full flex-col items-center justify-start gap-5 px-6 pt-16 text-center sm:pt-20">
+        {/* श्री गणेशाय नमः — fades in first, before anything else appears */}
+        <Reveal
+          text={NAMAH}
+          duration={0.8}
+          startDelay={300}
+          onDone={() => setPhase('image')}
+          className="font-serif text-xl font-medium tracking-wide text-foreground sm:text-2xl"
+          key="namah-reveal"
+        />
 
-      {/* ── centered A & K heart, sits where the curtains meet, fades as they part ── */}
-      <motion.div
-        className="pointer-events-none absolute left-1/2 top-1/2 z-45 -translate-x-1/2 -translate-y-1/2"
-        initial={{ opacity: 1, scale: 1 }}
-        animate={{ opacity: [1, 1, 0], scale: [1, 1.08, 0.9] }}
-        transition={{ duration: 2.2, delay: 1.9, ease: 'easeInOut' }}
-      >
-        <svg viewBox="0 0 100 100" className="size-24 sm:size-32" aria-hidden="true">
-          <defs>
-            <linearGradient id="curtainHeartGold" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0%" stopColor="oklch(0.97 0.05 90)" />
-              <stop offset="45%" stopColor="oklch(0.86 0.09 82)" />
-              <stop offset="100%" stopColor="oklch(0.74 0.1 74)" />
-            </linearGradient>
-          </defs>
-          <path
-            d="M50 90S8 64 8 36.5C8 22 18.5 13 30 13c8.5 0 15.5 4.8 20 12 4.5-7.2 11.5-12 20-12 11.5 0 22 9 22 23.5C92 64 50 90 50 90z"
-            fill="url(#curtainHeartGold)"
-            stroke="oklch(0.68 0.09 74 / 0.8)"
-            strokeWidth="1.4"
-            style={{ filter: 'drop-shadow(0 10px 20px oklch(0.5 0.08 74 / 0.45))' }}
+        {/* Ganesh medallion — fades and scales in once the namah finishes */}
+        <AnimatePresence>
+          {showImage && (
+            <motion.div
+              className="relative"
+              initial={{ opacity: 0, scale: 0.6, y: -14 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
+              onAnimationComplete={() => {
+                if (phase === 'image') setPhase('line1')
+              }}
+            >
+              <div
+                aria-hidden="true"
+                className="absolute -inset-3 rounded-full blur-xl"
+                style={{
+                  background:
+                    'radial-gradient(circle, oklch(0.93 0.06 88 / 0.55), transparent 70%)',
+                }}
+              />
+              <div
+                className="relative size-28 overflow-hidden rounded-full border-[3px] shadow-[0_10px_30px_-10px_oklch(0.5_0.08_74/0.6)] sm:size-32"
+                style={{ borderColor: 'var(--gold)' }}
+              >
+                <Image
+                  src="/media/gold_festive_ganesh_india.png"
+                  alt="Lord Ganesha"
+                  fill
+                  sizes="128px"
+                  className="object-cover"
+                />
+              </div>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 rounded-full"
+                style={{ boxShadow: 'inset 0 0 0 1px oklch(1 0 0 / 0.6)' }}
+              />
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* shlok — two lines, fading in one after the other */}
+        <div className="flex max-w-md flex-col items-center gap-1.5">
+          {showLine1 && (
+            <Reveal
+              text={SHLOK_LINE_1}
+              duration={0.8}
+              startDelay={100}
+              onDone={() => setPhase((p) => (p === 'line1' ? 'line2' : p))}
+              className="font-serif text-base font-light italic leading-relaxed text-foreground/90 sm:text-lg"
+              key="shlok-line-1"
+            />
+          )}
+          {showLine2 && (
+            <Reveal
+              text={SHLOK_LINE_2}
+              duration={0.8}
+              startDelay={150}
+              onDone={() => setPhase((p) => (p === 'line2' ? 'tagline' : p))}
+              className="font-serif text-base font-light italic leading-relaxed text-foreground/90 sm:text-lg"
+              key="shlok-line-2"
+            />
+          )}
+        </div>
+
+        {/* tagline — fades in only after the shlok finishes */}
+        {showTagline && (
+          <Reveal
+            text={TAGLINE}
+            duration={0.9}
+            startDelay={200}
+            className="font-serif text-2xl font-light italic text-foreground drop-shadow-[0_2px_10px_oklch(1_0_0/0.7)] sm:text-4xl mt-4 sm:mt-6"
+            key="tagline-reveal"
           />
-          <path
-            d="M50 82S16 60 16 37.5C16 26.5 24 19.5 32 19.5c6.5 0 12 4 18 11 6-7 11.5-11 18-11 8 0 16 7 16 18C84 60 50 82 50 82z"
-            fill="none"
-            stroke="oklch(1 0 0 / 0.55)"
-            strokeWidth="1"
-          />
-          <text
-            x="50"
-            y="55"
-            textAnchor="middle"
-            fontFamily="'Cormorant Garamond', serif"
-            fontSize="26"
-            fill="oklch(0.38 0.06 68)"
-            letterSpacing="1"
-          >
-            A
-            <tspan fontSize="16" fill="oklch(0.5 0.07 70)" dx="1">
-              &amp;
-            </tspan>
-            <tspan dx="1">K</tspan>
-          </text>
-        </svg>
-      </motion.div>
+        )}
+      </div>
     </motion.div>
   )
 }

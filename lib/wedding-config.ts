@@ -21,7 +21,7 @@ export const wedding = {
 
   /** YouTube background music (Shorts / video id). */
   music: {
-    youtubeId: 'ZP9ZjLmKuMY',
+    youtubeId: 'rSmbLLTHRBc',
     title: 'Our Wedding Song',
   },
 } as const
