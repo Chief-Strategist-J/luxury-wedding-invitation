@@ -1,17 +1,83 @@
-'use client'
-
 import { AnimatePresence, motion } from 'motion/react'
-import { useState } from 'react'
-import { FloralSprig, GoldCorner, GoldDivider, Petals, Sparkles } from '@/components/decor'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { GoldDivider, Petals, Sparkles } from '@/components/decor'
 import { useMusic } from '@/components/music-provider'
 
+type Spark = { id: number; x: number; y: number; a: number; d: number }
+
+/** Little sparkle trail that follows every tap / scroll (website-style magic dust) */
+function useTouchSparkles() {
+  const [sparks, setSparks] = useState<Spark[]>([])
+  const idRef = useRef(0)
+
+  const spawn = useCallback((x: number, y: number, count = 10) => {
+    const batch: Spark[] = Array.from({ length: count }).map((_, i) => ({
+      id: idRef.current++,
+      x,
+      y,
+      a: (i / count) * Math.PI * 2 + Math.random(),
+      d: 26 + Math.random() * 46,
+    }))
+    setSparks((s) => [...s.slice(-60), ...batch])
+    window.setTimeout(() => {
+      setSparks((s) => s.filter((k) => !batch.some((b) => b.id === k.id)))
+    }, 1100)
+  }, [])
+
+  useEffect(() => {
+    const onDown = (e: PointerEvent) => spawn(e.clientX, e.clientY, 12)
+    const onScroll = () =>
+      spawn(
+        window.innerWidth * (0.2 + Math.random() * 0.6),
+        window.innerHeight * (0.15 + Math.random() * 0.7),
+        6,
+      )
+    window.addEventListener('pointerdown', onDown)
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('touchmove', onScroll, { passive: true })
+    return () => {
+      window.removeEventListener('pointerdown', onDown)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('touchmove', onScroll)
+    }
+  }, [spawn])
+
+  const layer = (
+    <div aria-hidden="true" className="pointer-events-none fixed inset-0 z-[90]">
+      {sparks.map((s) => (
+        <motion.span
+          key={s.id}
+          className="absolute size-1.5 rounded-full"
+          style={{
+            left: s.x,
+            top: s.y,
+            background: 'oklch(0.95 0.07 88)',
+            boxShadow: '0 0 8px 2px oklch(0.9 0.09 86 / 0.85)',
+          }}
+          initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
+          animate={{
+            x: Math.cos(s.a) * s.d,
+            y: Math.sin(s.a) * s.d - 14,
+            opacity: 0,
+            scale: 0.3,
+          }}
+          transition={{ duration: 1, ease: 'easeOut' }}
+        />
+      ))}
+    </div>
+  )
+
+  return layer
+}
+
 /**
- * Screen 2 + 3: the locked luxury invitation and the cinematic 3D opening.
+ * Screen 2 + 3: locked invitation (heart lock) and the cinematic 3D opening.
  * NOTHING is revealed here — no names, no date, no countdown.
  */
 export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
   const [opening, setOpening] = useState(false)
   const { start } = useMusic()
+  const sparkleLayer = useTouchSparkles()
 
   function handleOpen() {
     if (opening) return
@@ -31,7 +97,7 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
         perspective: '1400px',
       }}
     >
-      {/* palace-inspired silhouette */}
+      {/* palace-inspired silhouette (background kept as-is) */}
       <svg
         aria-hidden="true"
         viewBox="0 0 400 300"
@@ -58,6 +124,7 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
 
       <Petals count={16} />
       <Sparkles count={16} />
+      {sparkleLayer}
 
       {/* golden light burst during opening */}
       <AnimatePresence>
@@ -86,71 +153,66 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
           }
           transition={{ duration: 3.2, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* ─ invitation card ─ */}
-          <div className="relative overflow-hidden rounded-[26px] border border-accent/40 bg-gradient-to-b from-card via-secondary/40 to-card px-6 pb-10 pt-9 shadow-[0_40px_90px_-40px_oklch(0.55_0.07_240/0.55)]">
-            <GoldCorner position="tl" />
-            <GoldCorner position="tr" />
-            <GoldCorner position="bl" />
-            <GoldCorner position="br" />
+          {/* ─ square invitation card (no floral corner borders) ─ */}
+          <div className="relative flex aspect-square flex-col items-center justify-center overflow-hidden rounded-2xl border border-accent/35 bg-gradient-to-b from-card via-secondary/40 to-card px-6 py-8 shadow-[0_40px_90px_-40px_oklch(0.55_0.07_240/0.55)]">
+            {/* soft glow behind the heart lock */}
+            <div
+              aria-hidden="true"
+              className="absolute left-1/2 top-[38%] size-52 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
+              style={{
+                background:
+                  'radial-gradient(circle, oklch(0.93 0.06 88 / 0.6), transparent 70%)',
+              }}
+            />
 
-            {/* inner gold frame */}
-            <div className="pointer-events-none absolute inset-4 rounded-[18px] border border-accent/25" />
-
-            {/* luxury arch */}
-            <div className="relative mx-auto mt-2 flex h-[19rem] w-[85%] items-end justify-center rounded-t-full border border-accent/35 bg-gradient-to-b from-secondary/70 via-card/70 to-card/20 sm:h-[21rem]">
-              <FloralSprig className="absolute -left-6 bottom-1 w-28 opacity-90" />
-              <FloralSprig
-                flip
-                className="absolute -right-6 bottom-1 w-28 opacity-90"
-              />
-
-              {/* 3D golden lock */}
-              <div
-                className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
-                style={{ perspective: '700px' }}
+            {/* ─ heart lock: tap the lock itself to open ─ */}
+            <div style={{ perspective: '700px' }}>
+              <motion.button
+                type="button"
+                onClick={handleOpen}
+                disabled={opening}
+                aria-label="Tap the heart lock to open the invitation"
+                className="relative block rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent/70"
+                style={{ transformStyle: 'preserve-3d' }}
+                whileTap={{ scale: 0.94 }}
+                animate={
+                  opening
+                    ? {
+                        rotateY: [0, 180, 380],
+                        rotateZ: [0, 8, -4],
+                        scale: [1, 1.14, 0.85],
+                        opacity: [1, 1, 0],
+                      }
+                    : { y: [0, -7, 0], scale: [1, 1.03, 1] }
+                }
+                transition={
+                  opening
+                    ? { duration: 2.2, ease: [0.65, 0, 0.35, 1] }
+                    : {
+                        duration: 3.4,
+                        repeat: Number.POSITIVE_INFINITY,
+                        ease: 'easeInOut',
+                      }
+                }
               >
-                <motion.div
-                  style={{ transformStyle: 'preserve-3d' }}
-                  animate={
-                    opening
-                      ? { rotateY: [0, 180, 380], rotateZ: [0, 8, -4], scale: [1, 1.12, 0.85], opacity: [1, 1, 0] }
-                      : { y: [0, -7, 0] }
-                  }
-                  transition={
-                    opening
-                      ? { duration: 2.2, ease: [0.65, 0, 0.35, 1] }
-                      : { duration: 4.5, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }
-                  }
-                >
-                  <Lock3D opening={opening} />
-                </motion.div>
-              </div>
-
-              {/* soft glow behind the lock */}
-              <div
-                aria-hidden="true"
-                className="absolute left-1/2 top-1/2 size-40 -translate-x-1/2 -translate-y-1/2 rounded-full blur-2xl"
-                style={{
-                  background:
-                    'radial-gradient(circle, oklch(0.93 0.06 88 / 0.6), transparent 70%)',
-                }}
-              />
+                <HeartLock opening={opening} />
+              </motion.button>
             </div>
 
-            <div className="relative mt-8 text-center">
-              <p className="font-serif text-[1.6rem] font-light italic leading-snug text-foreground/85">
+            <div className="relative mt-7 text-center">
+              <p className="font-serif text-[1.5rem] font-light italic leading-snug text-foreground/85">
                 A Beautiful Story Awaits...
               </p>
-              <GoldDivider className="mt-5" />
+              <GoldDivider className="mt-4" />
             </div>
 
-            {/* TAP TO OPEN */}
-            <div className="mt-7 flex justify-center">
+            {/* TAP TO OPEN (same action as tapping the lock) */}
+            <div className="mt-6 flex justify-center">
               <button
                 type="button"
                 onClick={handleOpen}
                 disabled={opening}
-                className="group relative overflow-hidden rounded-full border border-accent/60 bg-gradient-to-b from-[oklch(0.95_0.05_88)] to-[oklch(0.86_0.08_82)] px-9 py-4 text-[0.72rem] font-medium uppercase tracking-[0.34em] text-accent-foreground shadow-[0_14px_30px_-14px_oklch(0.7_0.09_82/0.8)] transition-transform active:scale-[0.97] disabled:opacity-70"
+                className="group relative overflow-hidden rounded-full border border-accent/60 bg-gradient-to-b from-[oklch(0.95_0.05_88)] to-[oklch(0.86_0.08_82)] px-8 py-3.5 text-[0.68rem] font-medium uppercase tracking-[0.34em] text-accent-foreground shadow-[0_14px_30px_-14px_oklch(0.7_0.09_82/0.8)] transition-transform active:scale-[0.97] disabled:opacity-70"
                 style={{ animation: 'soft-glow 2.8s ease-in-out infinite' }}
               >
                 <span className="relative z-10">
@@ -169,19 +231,17 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
           <AnimatePresence>
             {opening && (
               <motion.div
-                className="absolute inset-0 origin-left overflow-hidden rounded-[26px] border border-accent/50 bg-gradient-to-br from-[oklch(0.94_0.03_235)] via-[oklch(0.98_0.012_90)] to-[oklch(0.9_0.045_238)] shadow-[0_30px_70px_-30px_oklch(0.5_0.08_240/0.6)]"
+                className="absolute inset-0 origin-left overflow-hidden rounded-2xl border border-accent/50 bg-gradient-to-br from-[oklch(0.94_0.03_235)] via-[oklch(0.98_0.012_90)] to-[oklch(0.9_0.045_238)] shadow-[0_30px_70px_-30px_oklch(0.5_0.08_240/0.6)]"
                 initial={{ rotateY: 0 }}
                 animate={{ rotateY: -155 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 2.1, delay: 0.55, ease: [0.65, 0, 0.35, 1] }}
                 style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' }}
               >
-                <div className="pointer-events-none absolute inset-5 rounded-[16px] border border-accent/30" />
                 <div className="flex h-full items-center justify-center">
-                  <svg viewBox="0 0 100 100" className="size-24" fill="none" aria-hidden="true">
-                    <circle cx="50" cy="50" r="30" stroke="var(--gold)" strokeWidth="1" />
+                  <svg viewBox="0 0 32 32" className="size-24" aria-hidden="true">
                     <path
-                      d="M50 26c9 10 9 18 0 24-9-6-9-14 0-24zM50 74c-9-10-9-18 0-24 9 6 9 14 0 24zM26 50c10-9 18-9 24 0-6 9-14 9-24 0zM74 50c-10 9-18 9-24 0 6-9 14-9 24 0z"
+                      d="M16 28S3 20.4 3 11.9C3 7.5 6.3 4.5 10.2 4.5c2.6 0 4.6 1.4 5.8 3.3 1.2-1.9 3.2-3.3 5.8-3.3C25.7 4.5 29 7.5 29 11.9 29 20.4 16 28 16 28z"
                       fill="oklch(0.99 0.008 90 / 0.9)"
                       stroke="var(--gold-soft)"
                     />
@@ -196,13 +256,13 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
   )
 }
 
-/* ── Faux-3D golden lock built from layered shapes ────────── */
-function Lock3D({ opening }: { opening: boolean }) {
+/* ── Golden HEART lock with A&K monogram ─────────────────── */
+function HeartLock({ opening }: { opening: boolean }) {
   return (
     <div className="relative flex flex-col items-center">
       {/* shackle */}
       <motion.div
-        className="relative z-0 h-10 w-14 rounded-t-full border-[5px] border-b-0"
+        className="relative z-0 h-9 w-12 rounded-t-full border-[5px] border-b-0"
         style={{
           borderColor: 'oklch(0.82 0.09 82)',
           boxShadow: 'inset 0 2px 3px oklch(1 0 0 / 0.7)',
@@ -211,28 +271,68 @@ function Lock3D({ opening }: { opening: boolean }) {
         animate={opening ? { rotate: -38, x: 6, y: -3 } : { rotate: 0 }}
         transition={{ duration: 0.8, delay: 0.9, ease: 'backOut' }}
       />
-      {/* body */}
-      <div
-        className="relative -mt-1 flex size-[4.6rem] items-center justify-center rounded-2xl"
-        style={{
-          background:
-            'linear-gradient(145deg, oklch(0.96 0.05 90) 0%, oklch(0.85 0.09 82) 45%, oklch(0.74 0.1 74) 100%)',
-          boxShadow:
-            '0 12px 26px -12px oklch(0.6 0.09 74 / 0.85), inset 0 2px 4px oklch(1 0 0 / 0.65), inset 0 -3px 6px oklch(0.6 0.08 70 / 0.5)',
-        }}
-      >
-        <span
-          className="absolute inset-[6px] rounded-xl border border-white/45"
-          aria-hidden="true"
-        />
-        <svg viewBox="0 0 40 40" className="size-7" fill="none" aria-hidden="true">
-          <circle cx="20" cy="16" r="5" fill="oklch(0.55 0.07 70)" />
-          <path d="M20 20v9" stroke="oklch(0.55 0.07 70)" strokeWidth="3.4" strokeLinecap="round" />
+
+      {/* heart body */}
+      <div className="relative -mt-2 size-[7.5rem]">
+        <svg viewBox="0 0 100 100" className="size-full" aria-hidden="true">
+          <defs>
+            <linearGradient id="heartGold" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stopColor="oklch(0.97 0.05 90)" />
+              <stop offset="45%" stopColor="oklch(0.86 0.09 82)" />
+              <stop offset="100%" stopColor="oklch(0.74 0.1 74)" />
+            </linearGradient>
+          </defs>
+          <path
+            d="M50 92S8 66 8 38.5C8 24 18.5 15 30 15c8.5 0 15.5 4.8 20 12 4.5-7.2 11.5-12 20-12 11.5 0 22 9 22 23.5C92 66 50 92 50 92z"
+            fill="url(#heartGold)"
+            stroke="oklch(0.7 0.09 74 / 0.7)"
+            strokeWidth="1.2"
+            style={{
+              filter:
+                'drop-shadow(0 12px 22px oklch(0.6 0.09 74 / 0.55))',
+            }}
+          />
+          {/* inner outline */}
+          <path
+            d="M50 84S16 62 16 39.5C16 28.5 24 21.5 32 21.5c6.5 0 12 4 18 11 6-7 11.5-11 18-11 8 0 16 7 16 18C84 62 50 84 50 84z"
+            fill="none"
+            stroke="oklch(1 0 0 / 0.55)"
+            strokeWidth="1"
+          />
+          {/* highlight */}
+          <ellipse
+            cx="34"
+            cy="35"
+            rx="9"
+            ry="6"
+            fill="oklch(1 0 0 / 0.45)"
+            transform="rotate(-25 34 35)"
+          />
+          {/* A & K monogram */}
+          <text
+            x="50"
+            y="58"
+            textAnchor="middle"
+            fontFamily="'Cormorant Garamond', serif"
+            fontSize="27"
+            fill="oklch(0.42 0.06 68)"
+            letterSpacing="1"
+          >
+            A
+            <tspan fontSize="17" fill="oklch(0.55 0.07 70)" dx="1">
+              &amp;
+            </tspan>
+            <tspan dx="1">K</tspan>
+          </text>
+          {/* tiny keyhole */}
+          <circle cx="50" cy="68" r="3.2" fill="oklch(0.55 0.07 70)" />
+          <path
+            d="M50 70.5v5"
+            stroke="oklch(0.55 0.07 70)"
+            strokeWidth="2.6"
+            strokeLinecap="round"
+          />
         </svg>
-        <span
-          aria-hidden="true"
-          className="absolute inset-y-1 left-2 w-3 rounded-full bg-white/45 blur-[3px]"
-        />
       </div>
     </div>
   )

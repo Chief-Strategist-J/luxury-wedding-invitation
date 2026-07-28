@@ -2,68 +2,344 @@
 
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { GoldDivider, Petals, Sparkles } from '@/components/decor'
+import { GoldDivider } from '@/components/decor'
 import { wedding, weddingDateParts } from '@/lib/wedding-config'
 
-/** Screen 5: the main WOW interaction. Everything is hidden until scratched. */
-export function ScratchReveal({ onDone }: { onDone: () => void }) {
-  const canvasRef = useRef<HTMLCanvasElement | null>(null)
-  const wrapRef = useRef<HTMLDivElement | null>(null)
-  const drawingRef = useRef(false)
-  const lastRef = useRef<{ x: number; y: number } | null>(null)
-  const tickRef = useRef(0)
-  const [progress, setProgress] = useState(0)
-  const burst = progress >= 0.65
+/* ── heart geometry, reused as the scratch mask ── */
+const HEART_PATH =
+  'M50 92C50 92 8 66 8 38.5 8 24.4 18.6 15 30.6 15c8.4 0 15.3 4.7 19.4 11.7C54.1 19.7 61 15 69.4 15 81.4 15 92 24.4 92 38.5 92 66 50 92 50 92Z'
 
-  /* paint the luxury foil surface */
-  const paintFoil = useCallback((canvas: HTMLCanvasElement) => {
-    const ctx = canvas.getContext('2d')
-    if (!ctx) return
-    const { width: w, height: h } = canvas
-    const g = ctx.createLinearGradient(0, 0, w, h)
-    g.addColorStop(0, '#e9d9a8')
-    g.addColorStop(0.25, '#f7ecc9')
-    g.addColorStop(0.5, '#d9c184')
-    g.addColorStop(0.75, '#f9f1d8')
-    g.addColorStop(1, '#dcc48c')
-    ctx.fillStyle = g
-    ctx.fillRect(0, 0, w, h)
+const HEART_MASK = `url("data:image/svg+xml;utf8,${encodeURIComponent(
+  `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="${HEART_PATH}" fill="#000"/></svg>`,
+)}")`
 
-    // ornamental diamond lattice
-    ctx.strokeStyle = 'rgba(255,255,255,0.5)'
-    ctx.lineWidth = 1
-    const step = 34
-    for (let x = -h; x < w + h; x += step) {
-      ctx.beginPath()
-      ctx.moveTo(x, 0)
-      ctx.lineTo(x + h, h)
-      ctx.stroke()
-      ctx.beginPath()
-      ctx.moveTo(x, h)
-      ctx.lineTo(x + h, 0)
-      ctx.stroke()
-    }
-    // soft sheen
-    const sheen = ctx.createLinearGradient(0, h, w, 0)
-    sheen.addColorStop(0, 'rgba(255,255,255,0)')
-    sheen.addColorStop(0.45, 'rgba(255,255,255,0.45)')
-    sheen.addColorStop(0.6, 'rgba(255,255,255,0)')
-    ctx.fillStyle = sheen
-    ctx.fillRect(0, 0, w, h)
+const MONTHS_SHORT = [
+  'Jan',
+  'Feb',
+  'Mar',
+  'Apr',
+  'May',
+  'Jun',
+  'Jul',
+  'Aug',
+  'Sep',
+  'Oct',
+  'Nov',
+  'Dec',
+]
 
-    const c = ctx as CanvasRenderingContext2D & { letterSpacing?: string }
-    c.font = `500 ${Math.round(w * 0.045)}px Jost, sans-serif`
-    c.fillStyle = 'rgba(120,95,40,0.72)'
-    c.textAlign = 'center'
-    c.letterSpacing = '6px'
-    c.fillText('SCRATCH TO REVEAL', w / 2, h * 0.54)
-    c.font = `italic ${Math.round(w * 0.055)}px 'Cormorant Garamond', serif`
-    c.fillStyle = 'rgba(120,95,40,0.55)'
-    c.letterSpacing = '1px'
-    c.fillText('use your finger', w / 2, h * 0.63)
+function shortMonth(raw: string | number) {
+  const s = String(raw).trim()
+  const asNum = Number(s)
+  if (!Number.isNaN(asNum) && asNum >= 1 && asNum <= 12) return MONTHS_SHORT[asNum - 1]
+  const hit = MONTHS_SHORT.find((m) => s.toLowerCase().startsWith(m.toLowerCase()))
+  return hit ?? s.slice(0, 3)
+}
+
+function monthIndex(raw: string | number) {
+  const s = String(raw).trim()
+  const asNum = Number(s)
+  if (!Number.isNaN(asNum) && asNum >= 1 && asNum <= 12) return asNum - 1
+  const i = MONTHS_SHORT.findIndex((m) => s.toLowerCase().startsWith(m.toLowerCase()))
+  return i < 0 ? 0 : i
+}
+
+/* the wedding moment, rebuilt from the configured date parts */
+function weddingTarget() {
+  return new Date(
+    Number(weddingDateParts.year),
+    monthIndex(weddingDateParts.month),
+    Number(weddingDateParts.day),
+    10,
+    0,
+    0,
+  ).getTime()
+}
+
+function splitRemaining(ms: number) {
+  const clamped = Math.max(0, ms)
+  const s = Math.floor(clamped / 1000)
+  return {
+    days: Math.floor(s / 86400),
+    hours: Math.floor((s % 86400) / 3600),
+    minutes: Math.floor((s % 3600) / 60),
+    seconds: s % 60,
+  }
+}
+
+/* ── live countdown, shown under the revealed date ── */
+function DateCountdown() {
+  const [left, setLeft] = useState(() => splitRemaining(weddingTarget() - Date.now()))
+
+  useEffect(() => {
+    const target = weddingTarget()
+    const id = window.setInterval(
+      () => setLeft(splitRemaining(target - Date.now())),
+      1000,
+    )
+    return () => window.clearInterval(id)
   }, [])
 
-  /* size the canvas to its wrapper */
+  const cells = [
+    { v: left.days, l: 'Days' },
+    { v: left.hours, l: 'Hrs' },
+    { v: left.minutes, l: 'Min' },
+    { v: left.seconds, l: 'Sec' },
+  ]
+
+  return (
+    <motion.div
+      className="mt-6 flex flex-col items-center"
+      initial={{ opacity: 0, y: 16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay: 0.35, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+    >
+      <p
+        className="text-[0.58rem] uppercase tracking-[0.34em]"
+        style={{ color: 'oklch(0.62 0.1 16)' }}
+      >
+        Counting Every Heartbeat
+      </p>
+      <div className="mt-3 flex items-stretch gap-2 sm:gap-3">
+        {cells.map((c, i) => (
+          <motion.div
+            key={c.l}
+            className="flex min-w-[3.4rem] flex-col items-center rounded-xl border px-3 py-2 backdrop-blur-sm sm:min-w-[3.9rem]"
+            initial={{ opacity: 0, scale: 0.86 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.45 + i * 0.09, duration: 0.6 }}
+            style={{
+              borderColor: 'oklch(0.86 0.06 16 / 0.8)',
+              background:
+                'linear-gradient(160deg, oklch(1 0 0 / 0.78), oklch(0.96 0.03 16 / 0.6))',
+              boxShadow: '0 10px 24px -18px oklch(0.6 0.12 16 / 0.85)',
+            }}
+          >
+            <span
+              className="font-serif text-xl font-light leading-none tabular-nums sm:text-2xl"
+              style={{ color: 'oklch(0.42 0.12 16)' }}
+            >
+              {String(c.v).padStart(2, '0')}
+            </span>
+            <span
+              className="mt-1 text-[0.44rem] uppercase tracking-[0.22em]"
+              style={{ color: 'oklch(0.63 0.09 16)' }}
+            >
+              {c.l}
+            </span>
+          </motion.div>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+/**
+ * Screen 5 — the date lives inside three scratchable hearts.
+ * Names stay visible; when all three hearts are scratched the story
+ * continues on its own (no button, no scroll prompt).
+ */
+export function ScratchReveal({
+  onDone,
+  embedded = false,
+}: {
+  onDone: () => void
+  embedded?: boolean
+}) {
+  const [open, setOpen] = useState<[boolean, boolean, boolean]>([false, false, false])
+  const allOpen = open.every(Boolean)
+  const doneRef = useRef(false)
+
+  const markOpen = useCallback((i: number) => {
+    setOpen((prev) => {
+      if (prev[i]) return prev
+      const next = [...prev] as [boolean, boolean, boolean]
+      next[i] = true
+      return next
+    })
+  }, [])
+
+  /* the date is revealed -> 2 seconds later the story continues on its own */
+  useEffect(() => {
+    if (!allOpen || doneRef.current) return
+    doneRef.current = true
+    const t = window.setTimeout(onDone, 2000)
+    return () => window.clearTimeout(t)
+  }, [allOpen, onDone])
+
+  const parts = [
+    { value: String(weddingDateParts.day), label: 'Day' },
+    { value: shortMonth(weddingDateParts.month), label: 'Month' },
+    { value: String(weddingDateParts.year), label: 'Year' },
+  ]
+
+  return (
+    <motion.div
+      className={
+        embedded
+          ? 'absolute inset-0 z-40 flex flex-col items-center justify-center px-5'
+          : 'fixed inset-0 z-[52] flex flex-col items-center justify-center px-5'
+      }
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0, y: -24 }}
+      transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+      style={
+        embedded
+          ? undefined
+          : {
+              background:
+                'linear-gradient(180deg, oklch(0.9 0.05 236) 0%, oklch(0.96 0.02 234) 45%, oklch(0.99 0.008 90) 100%)',
+            }
+      }
+    >
+      <div className="flex w-full max-w-md flex-col items-center text-center">
+        {/* ── names: always visible, never scratched ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.9 }}
+        >
+          <p className="font-serif text-[2rem] font-light leading-tight text-foreground drop-shadow-[0_2px_10px_oklch(1_0_0/0.7)] sm:text-4xl">
+            {wedding.groom}
+            <span className="mx-2" style={{ color: 'oklch(0.74 0.13 14)' }}>
+              &hearts;
+            </span>
+            {wedding.bride}
+          </p>
+          <GoldDivider className="mt-4" />
+          <p className="mt-3 text-[0.7rem] font-medium uppercase tracking-[0.3em] text-gold-gradient">
+            {wedding.hashtag}
+          </p>
+        </motion.div>
+
+        {/* ── the three date hearts ── */}
+        <div className="mt-9 flex items-end justify-center gap-3 sm:gap-5">
+          {parts.map((p, i) => (
+            <HeartScratch
+              key={p.label}
+              value={p.value}
+              label={p.label}
+              delay={0.5 + i * 0.16}
+              opened={open[i]}
+              onOpen={() => markOpen(i)}
+            />
+          ))}
+        </div>
+
+        <AnimatePresence mode="wait">
+          {allOpen ? (
+            <motion.div
+              key="saved"
+              className="flex flex-col items-center"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.9 }}
+            >
+              <p className="mt-8 font-serif text-lg font-light italic text-foreground/85">
+                Save Our Date &mdash; We Cannot Wait...
+              </p>
+              <DateCountdown />
+            </motion.div>
+          ) : (
+            <motion.p
+              key="hint"
+              className="mt-8 text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
+              Scratch each heart with your finger
+            </motion.p>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  )
+}
+
+/* ── a single heart-shaped scratch panel ── */
+function HeartScratch({
+  value,
+  label,
+  delay,
+  opened,
+  onOpen,
+}: {
+  value: string
+  label: string
+  delay: number
+  opened: boolean
+  onOpen: () => void
+}) {
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  const canvasRef = useRef<HTMLCanvasElement | null>(null)
+  const drawing = useRef(false)
+  const last = useRef<{ x: number; y: number } | null>(null)
+  const tick = useRef(0)
+  const [progress, setProgress] = useState(0)
+
+  /* rose-gold foil, clipped to the heart by the CSS mask */
+  const paint = useCallback(
+    (canvas: HTMLCanvasElement) => {
+      const ctx = canvas.getContext('2d')
+      if (!ctx) return
+      const { width: w, height: h } = canvas
+      ctx.globalCompositeOperation = 'source-over'
+      const g = ctx.createLinearGradient(0, 0, w, h)
+      g.addColorStop(0, '#f6dfe0')
+      g.addColorStop(0.35, '#f2c9cd')
+      g.addColorStop(0.6, '#eebfb6')
+      g.addColorStop(1, '#e6c79a')
+      ctx.fillStyle = g
+      ctx.fillRect(0, 0, w, h)
+
+      /* soft sparkles of light instead of the old diagonal lines */
+      const rand = (n: number) => {
+        const s = Math.sin(n * 12.9898) * 43758.5453
+        return s - Math.floor(s)
+      }
+      for (let i = 0; i < 30; i++) {
+        const x = rand(i + 1) * w
+        const y = rand(i + 7.3) * h
+        const r = 1.4 + rand(i + 3.1) * 3.4
+        const halo = ctx.createRadialGradient(x, y, 0, x, y, r * 3.4)
+        halo.addColorStop(0, `rgba(255,255,255,${0.5 + rand(i + 5.7) * 0.4})`)
+        halo.addColorStop(0.45, 'rgba(255,246,240,0.24)')
+        halo.addColorStop(1, 'rgba(255,255,255,0)')
+        ctx.fillStyle = halo
+        ctx.beginPath()
+        ctx.arc(x, y, r * 3.4, 0, Math.PI * 2)
+        ctx.fill()
+
+        /* tiny four-point glint */
+        ctx.strokeStyle = `rgba(255,255,255,${0.35 + rand(i + 9.4) * 0.4})`
+        ctx.lineWidth = 0.9
+        ctx.beginPath()
+        ctx.moveTo(x - r, y)
+        ctx.lineTo(x + r, y)
+        ctx.moveTo(x, y - r)
+        ctx.lineTo(x, y + r)
+        ctx.stroke()
+      }
+
+      const sheen = ctx.createLinearGradient(0, h, w, 0)
+      sheen.addColorStop(0, 'rgba(255,255,255,0)')
+      sheen.addColorStop(0.5, 'rgba(255,255,255,0.5)')
+      sheen.addColorStop(0.7, 'rgba(255,255,255,0)')
+      ctx.fillStyle = sheen
+      ctx.fillRect(0, 0, w, h)
+
+      const c = ctx as CanvasRenderingContext2D & { letterSpacing?: string }
+      c.textAlign = 'center'
+      c.letterSpacing = '3px'
+      c.font = `500 ${Math.max(8, Math.round(w * 0.085))}px Jost, sans-serif`
+      c.fillStyle = 'rgba(140,80,80,0.7)'
+      c.fillText(label.toUpperCase(), w / 2, h * 0.52)
+    },
+    [label],
+  )
+
   useEffect(() => {
     const canvas = canvasRef.current
     const wrap = wrapRef.current
@@ -72,14 +348,14 @@ export function ScratchReveal({ onDone }: { onDone: () => void }) {
       const r = wrap.getBoundingClientRect()
       canvas.width = Math.max(1, Math.round(r.width))
       canvas.height = Math.max(1, Math.round(r.height))
-      paintFoil(canvas)
+      paint(canvas)
       setProgress(0)
     }
     setup()
     const ro = new ResizeObserver(setup)
     ro.observe(wrap)
     return () => ro.disconnect()
-  }, [paintFoil])
+  }, [paint])
 
   const measure = useCallback(() => {
     const canvas = canvasRef.current
@@ -88,31 +364,37 @@ export function ScratchReveal({ onDone }: { onDone: () => void }) {
     const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height)
     let clear = 0
     let total = 0
-    for (let i = 3; i < data.length; i += 4 * 24) {
+    for (let i = 3; i < data.length; i += 4 * 16) {
       total++
       if (data[i] < 40) clear++
     }
     if (total) setProgress(clear / total)
   }, [])
 
+  useEffect(() => {
+    /* half the foil is enough — the rest opens on its own */
+    if (!opened && progress >= 0.5) onOpen()
+  }, [progress, opened, onOpen])
+
   const scratch = useCallback((x: number, y: number) => {
     const canvas = canvasRef.current
     const ctx = canvas?.getContext('2d')
     if (!canvas || !ctx) return
     ctx.globalCompositeOperation = 'destination-out'
-    ctx.lineWidth = 46
+    ctx.lineWidth = 34
     ctx.lineCap = 'round'
     ctx.lineJoin = 'round'
-    const last = lastRef.current
-    ctx.beginPath()
-    if (last) {
-      ctx.moveTo(last.x, last.y)
+    const l = last.current
+    if (l) {
+      ctx.beginPath()
+      ctx.moveTo(l.x, l.y)
       ctx.lineTo(x, y)
       ctx.stroke()
     }
-    ctx.arc(x, y, 23, 0, Math.PI * 2)
+    ctx.beginPath()
+    ctx.arc(x, y, 17, 0, Math.PI * 2)
     ctx.fill()
-    lastRef.current = { x, y }
+    last.current = { x, y }
   }, [])
 
   function pointFrom(e: React.PointerEvent) {
@@ -127,235 +409,168 @@ export function ScratchReveal({ onDone }: { onDone: () => void }) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[52] overflow-y-auto overscroll-contain"
-      exit={{ opacity: 0, y: -30 }}
-      transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-      style={{
-        background:
-          'linear-gradient(180deg, oklch(0.9 0.05 236) 0%, oklch(0.96 0.02 234) 45%, oklch(0.99 0.008 90) 100%)',
+      className="relative"
+      initial={{ opacity: 0, y: 26, scale: 0.85 }}
+      animate={{
+        opacity: 1,
+        y: 0,
+        /* the heart grows a little once its number is revealed */
+        scale: opened ? 1.16 : 1,
       }}
+      transition={{ delay, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
     >
-      {/* dreamy clouds */}
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-        {[
-          { t: '8%', l: '-6%', s: 260, o: 0.85 },
-          { t: '26%', l: '58%', s: 320, o: 0.7 },
-          { t: '58%', l: '10%', s: 380, o: 0.6 },
-          { t: '76%', l: '62%', s: 240, o: 0.75 },
-        ].map((c, i) => (
-          <div
-            key={i}
-            className="absolute rounded-full blur-2xl"
-            style={{
-              top: c.t,
-              left: c.l,
-              width: c.s,
-              height: c.s * 0.5,
-              opacity: c.o,
-              background:
-                'radial-gradient(closest-side, oklch(1 0 0 / 0.95), transparent)',
-              animation: `gentle-float ${9 + i * 2}s ease-in-out infinite`,
-            }}
-          />
-        ))}
-      </div>
+      {/* dhak-dhak heartbeat — softly before the scratch, fuller after */}
+      <motion.div
+        className="relative"
+        animate={{
+          scale: opened ? [1, 1.09, 1.005, 1.06, 1] : [1, 1.045, 1.005, 1.03, 1],
+        }}
+        transition={{
+          duration: opened ? 1.25 : 1.6,
+          times: [0, 0.16, 0.34, 0.5, 1],
+          repeat: Number.POSITIVE_INFINITY,
+          ease: 'easeInOut',
+          delay: delay + 0.2,
+        }}
+      >
+      {/* glow behind the heart */}
+      <motion.span
+        aria-hidden="true"
+        className="pointer-events-none absolute -inset-4 rounded-full blur-xl"
+        animate={{ opacity: opened ? 0.85 : 0.35 }}
+        style={{
+          background:
+            'radial-gradient(closest-side, oklch(0.9 0.08 16 / 0.75), transparent)',
+        }}
+      />
 
-      <Petals count={14} />
-      <Sparkles count={burst ? 34 : 12} />
-
-      <div className="relative z-10 mx-auto flex min-h-full w-full max-w-md flex-col items-center justify-center px-5 py-12">
-        <motion.p
-          className="mb-6 text-center font-serif text-xl font-light italic leading-relaxed text-foreground/80 sm:text-2xl"
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3, duration: 0.9 }}
+      <div
+        ref={wrapRef}
+        className="relative size-[6.4rem] touch-none select-none sm:size-32"
+        style={{
+          maskImage: HEART_MASK,
+          WebkitMaskImage: HEART_MASK,
+          maskSize: '100% 100%',
+          WebkitMaskSize: '100% 100%',
+          maskRepeat: 'no-repeat',
+          WebkitMaskRepeat: 'no-repeat',
+        }}
+      >
+        {/* the value hidden underneath */}
+        <div
+          className="absolute inset-0 flex flex-col items-center justify-center pb-3"
+          style={{
+            background:
+              'linear-gradient(155deg, oklch(0.98 0.02 18), oklch(0.93 0.055 16) 55%, oklch(0.87 0.09 14))',
+          }}
         >
-          Something Beautiful Is Waiting To Be Revealed...
-        </motion.p>
-
-        {/* floating 3D card */}
-        <motion.div
-          className="relative w-full"
-          initial={{ opacity: 0, y: 40, rotateX: 14 }}
-          animate={{ opacity: 1, y: 0, rotateX: 0 }}
-          transition={{ delay: 0.45, duration: 1.1, ease: [0.22, 1, 0.36, 1] }}
-          style={{ perspective: '1200px' }}
-        >
-          <div
-            className="relative rounded-3xl p-[2px] shadow-[0_44px_80px_-38px_oklch(0.5_0.07_240/0.6)]"
-            style={{
-              background:
-                'linear-gradient(140deg, oklch(0.9 0.07 88), oklch(0.99 0.02 90), oklch(0.82 0.09 80))',
-              animation: 'gentle-float 7s ease-in-out infinite',
-            }}
+          <span
+            className={
+              label === 'Month'
+                ? 'font-serif text-xl font-medium tracking-[0.06em] sm:text-2xl'
+                : 'font-serif text-2xl font-light sm:text-3xl'
+            }
+            style={{ color: 'oklch(0.42 0.12 16)' }}
           >
-            <div className="relative overflow-hidden rounded-[22px] bg-gradient-to-b from-card to-secondary/50">
-              <div
-                ref={wrapRef}
-                className="relative aspect-[3/4] w-full touch-none select-none"
-              >
-                {/* ── hidden content underneath ── */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 px-6 text-center">
-                  <motion.div
-                    animate={{ opacity: progress > 0.12 ? 1 : 0, scale: progress > 0.12 ? 1 : 0.92 }}
-                    transition={{ duration: 0.7 }}
-                  >
-                    <p className="font-serif text-[2.1rem] font-light leading-tight text-foreground sm:text-4xl">
-                      {wedding.groom}
-                      <span className="mx-2 text-accent">&hearts;</span>
-                      {wedding.bride}
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    animate={{ opacity: progress > 0.34 ? 1 : 0, y: progress > 0.34 ? 0 : 10 }}
-                    transition={{ duration: 0.7 }}
-                  >
-                    <GoldDivider />
-                    <p className="mt-3 text-sm font-medium uppercase tracking-[0.3em] text-gold-gradient">
-                      {wedding.hashtag}
-                    </p>
-                  </motion.div>
-
-                  <motion.div
-                    className="mt-2 flex items-end justify-center gap-3"
-                    animate={{ opacity: progress > 0.5 ? 1 : 0, y: progress > 0.5 ? 0 : 14 }}
-                    transition={{ duration: 0.8 }}
-                  >
-                    <span className="font-serif text-4xl font-light text-foreground">
-                      {weddingDateParts.day}
-                    </span>
-                    <span className="pb-1 font-serif text-xl font-light uppercase tracking-[0.22em] text-accent-foreground">
-                      {weddingDateParts.month}
-                    </span>
-                    <span className="font-serif text-4xl font-light text-foreground">
-                      {weddingDateParts.year}
-                    </span>
-                  </motion.div>
-                </div>
-
-                {/* ── scratch surface ── */}
-                <canvas
-                  ref={canvasRef}
-                  className="absolute inset-0 size-full cursor-grab rounded-[20px] touch-none"
-                  onPointerDown={(e) => {
-                    e.currentTarget.setPointerCapture(e.pointerId)
-                    drawingRef.current = true
-                    lastRef.current = null
-                    const p = pointFrom(e)
-                    scratch(p.x, p.y)
-                  }}
-                  onPointerMove={(e) => {
-                    if (!drawingRef.current) return
-                    const p = pointFrom(e)
-                    scratch(p.x, p.y)
-                    tickRef.current += 1
-                    if (tickRef.current % 6 === 0) measure()
-                  }}
-                  onPointerUp={() => {
-                    drawingRef.current = false
-                    lastRef.current = null
-                    measure()
-                  }}
-                  onPointerLeave={() => {
-                    if (drawingRef.current) measure()
-                    drawingRef.current = false
-                    lastRef.current = null
-                  }}
-                />
-
-                {/* sparkle explosion */}
-                <AnimatePresence>
-                  {burst && (
-                    <motion.div
-                      className="pointer-events-none absolute inset-0"
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                    >
-                      <motion.div
-                        className="absolute inset-0"
-                        initial={{ opacity: 0.95, scale: 0.4 }}
-                        animate={{ opacity: 0, scale: 1.6 }}
-                        transition={{ duration: 1.6, ease: 'easeOut' }}
-                        style={{
-                          background:
-                            'radial-gradient(circle at 50% 50%, oklch(0.98 0.06 90 / 0.95), transparent 65%)',
-                        }}
-                      />
-                      {Array.from({ length: 22 }).map((_, i) => {
-                        const a = (i / 22) * Math.PI * 2
-                        return (
-                          <motion.span
-                            key={i}
-                            className="absolute left-1/2 top-1/2 size-1.5 rounded-full bg-accent"
-                            style={{ boxShadow: '0 0 10px 3px oklch(0.88 0.09 86 / 0.8)' }}
-                            initial={{ x: 0, y: 0, opacity: 1, scale: 1 }}
-                            animate={{
-                              x: Math.cos(a) * 150,
-                              y: Math.sin(a) * 190,
-                              opacity: 0,
-                              scale: 0.4,
-                            }}
-                            transition={{ duration: 1.5, delay: i * 0.02, ease: 'easeOut' }}
-                          />
-                        )
-                      })}
-                      {Array.from({ length: 8 }).map((_, i) => (
-                        <motion.span
-                          key={`h${i}`}
-                          className="absolute left-1/2 top-1/2 text-accent"
-                          initial={{ x: 0, y: 0, opacity: 1 }}
-                          animate={{
-                            x: (i % 2 ? 1 : -1) * (30 + i * 16),
-                            y: -120 - i * 14,
-                            opacity: 0,
-                          }}
-                          transition={{ duration: 2.2, delay: 0.1 + i * 0.09 }}
-                        >
-                          &hearts;
-                        </motion.span>
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-
-        {/* progress + continue */}
-        <div className="mt-7 flex w-full flex-col items-center gap-4">
-          <div className="h-px w-40 overflow-hidden bg-accent/25">
-            <div
-              className="h-full bg-accent transition-[width] duration-300"
-              style={{ width: `${Math.min(100, Math.round(progress * 145))}%` }}
-            />
-          </div>
-          <AnimatePresence>
-            {burst ? (
-              <motion.button
-                key="continue"
-                type="button"
-                onClick={onDone}
-                initial={{ opacity: 0, y: 14 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-full border border-accent/60 bg-card/85 px-8 py-3.5 text-[0.68rem] font-medium uppercase tracking-[0.32em] text-accent-foreground shadow-[0_12px_28px_-14px_oklch(0.7_0.09_82/0.7)] backdrop-blur transition-transform active:scale-[0.97]"
-              >
-                Enter Our World
-              </motion.button>
-            ) : (
-              <motion.p
-                key="hint"
-                className="text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                Scratch to reveal
-              </motion.p>
-            )}
-          </AnimatePresence>
+            {value}
+          </span>
+          <span
+            className="mt-0.5 text-[0.45rem] uppercase tracking-[0.24em]"
+            style={{ color: 'oklch(0.6 0.1 16)' }}
+          >
+            {label}
+          </span>
         </div>
+
+        {/* the foil */}
+        <motion.canvas
+          ref={canvasRef}
+          className="absolute inset-0 size-full touch-none cursor-grab"
+          animate={{ opacity: opened ? 0 : 1 }}
+          transition={{ duration: 0.7, ease: 'easeOut' }}
+          style={{ pointerEvents: opened ? 'none' : 'auto' }}
+          onPointerDown={(e) => {
+            e.currentTarget.setPointerCapture(e.pointerId)
+            drawing.current = true
+            last.current = null
+            const p = pointFrom(e)
+            scratch(p.x, p.y)
+          }}
+          onPointerMove={(e) => {
+            if (!drawing.current) return
+            const p = pointFrom(e)
+            scratch(p.x, p.y)
+            tick.current += 1
+            if (tick.current % 3 === 0) measure()
+          }}
+          onPointerUp={() => {
+            drawing.current = false
+            last.current = null
+            measure()
+          }}
+          onPointerLeave={() => {
+            if (drawing.current) measure()
+            drawing.current = false
+            last.current = null
+          }}
+        />
       </div>
+
+      {/* heart outline on top */}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 100 100"
+        className="pointer-events-none absolute inset-0 size-full"
+      >
+        <path
+          d={HEART_PATH}
+          fill="none"
+          stroke="oklch(0.78 0.11 14 / 0.9)"
+          strokeWidth="1.6"
+        />
+      </svg>
+
+      {/* sparkle decor when the heart opens */}
+      <AnimatePresence>
+        {opened && (
+          <motion.div
+            className="pointer-events-none absolute inset-0"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <motion.span
+              className="absolute inset-0"
+              initial={{ opacity: 0.9, scale: 0.5 }}
+              animate={{ opacity: 0, scale: 1.9 }}
+              transition={{ duration: 1.4, ease: 'easeOut' }}
+              style={{
+                background:
+                  'radial-gradient(circle at 50% 50%, oklch(0.95 0.06 18 / 0.95), transparent 65%)',
+              }}
+            />
+            {Array.from({ length: 10 }).map((_, i) => (
+              <motion.span
+                key={i}
+                className="absolute left-1/2 top-1/2 text-[0.6rem]"
+                style={{ color: i % 2 ? 'oklch(0.75 0.14 14)' : 'var(--gold)' }}
+                initial={{ x: 0, y: 0, opacity: 1, scale: 0.5 }}
+                animate={{
+                  x: Math.cos((i / 10) * Math.PI * 2) * (44 + (i % 3) * 12),
+                  y: Math.sin((i / 10) * Math.PI * 2) * (44 + (i % 3) * 12) - 16,
+                  opacity: 0,
+                  scale: 1.15,
+                  rotate: i % 2 ? 40 : -40,
+                }}
+                transition={{ duration: 1.6, delay: 0.05 * i, ease: 'easeOut' }}
+              >
+                {i % 2 ? '\u2665' : '\u2726'}
+              </motion.span>
+            ))}
+          </motion.div>
+        )}
+      </AnimatePresence>
+      </motion.div>
+      <span className="sr-only">{`${label}: ${value}`}</span>
     </motion.div>
   )
 }
