@@ -6,8 +6,14 @@
 export const wedding = {
   groom: 'Arnav',
   groomFull: 'Arnav Patel',
+  groomFather: 'Rajeshbhai Ganeshbhai Patel',
+  groomMother: 'Mittalben Rajeshbhai Patel',
+
   bride: 'Kiara',
   brideFull: 'Kiara Patel',
+  brideFather: 'Vikrambhai Pravinbhai Patel',
+  brideMother: 'Meeraben Vikrambhai Patel',
+
   hashtag: '#AriaKiShaadi',
 
   /** The ONE date that powers the date reveal + countdown. */
