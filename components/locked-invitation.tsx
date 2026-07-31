@@ -73,6 +73,13 @@ function useTouchSparkles() {
 /**
  * Screen 2 + 3: locked invitation (heart lock) and the cinematic 3D opening.
  * NOTHING is revealed here — no names, no date, no countdown.
+ *
+ * Only ONE unlock animation plays: the card cover swinging open (with its
+ * own unlocking A&K heart). The base card stays visible underneath (just
+ * non-interactive) so nothing disappears, and neither the button nor the
+ * flap ever shows an "Opening..." label — only the swing itself communicates it.
+ * underneath simply goes still and fades slightly the moment it's tapped,
+ * so nothing duplicates once the flap swings away.
  */
 export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
   const [opening, setOpening] = useState(false)
@@ -83,7 +90,8 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
     if (opening) return
     setOpening(true)
     start() // music begins here — never on load
-    setTimeout(onOpened, 3400)
+    // swing plays for ~3s total (0.55s delay + 3.2s swing), then hand off to the next page
+    setTimeout(onOpened, 3000)
   }
 
   return (
@@ -122,19 +130,16 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
         <motion.div
           className="relative w-full max-w-[19rem]"
           style={{ transformStyle: 'preserve-3d' }}
-          animate={
-            opening
-              ? { scale: [1, 1.03, 1.12], y: [0, -4, -10], rotateX: [0, 2, 6] }
-              : {}
-          }
-          transition={{ duration: 3.2, ease: [0.22, 1, 0.36, 1] }}
         >
-          {/* ─ invitation card — natural height instead of a forced square, so it isn't overly tall ─ */}
-          <div
+          {/* ─ invitation card — natural height instead of a forced square, so it isn't overly tall ─
+              stays visible (just non-interactive) while the flap swings open on top,
+              so the "Tap to Open" card itself is never removed from view. */}
+          <motion.div
             className="relative flex flex-col items-center justify-center overflow-hidden rounded-2xl border border-accent/35 px-8 py-9 shadow-[0_40px_90px_-40px_oklch(0.55_0.07_240/0.55)]"
             style={{
               background:
                 'radial-gradient(115% 80% at 50% 8%, oklch(0.995 0.006 90) 0%, oklch(0.955 0.022 235) 42%, oklch(0.885 0.045 238) 100%)',
+              pointerEvents: opening ? 'none' : 'auto',
             }}
           >
             {/* soft glow behind the heart lock */}
@@ -157,17 +162,14 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
                 className="relative block rounded-full outline-none focus-visible:ring-2 focus-visible:ring-accent/70"
                 style={{ transformStyle: 'preserve-3d' }}
                 whileTap={{ scale: 0.94 }}
-                 animate={
+                animate={
                   opening
-                    ? {
-                        scale: [1, 1.1, 1.05, 0.96],
-                        y: [0, -4, -4, -8],
-                      }
+                    ? { y: 0, scale: 1 }
                     : { y: [0, -7, 0], scale: [1, 1.03, 1] }
                 }
                 transition={
                   opening
-                    ? { duration: 2.2, times: [0, 0.35, 0.75, 1], ease: [0.65, 0, 0.35, 1] }
+                    ? { duration: 0.4 }
                     : {
                         duration: 3.4,
                         repeat: Number.POSITIVE_INFINITY,
@@ -186,8 +188,14 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
               <GoldDivider className="mt-4" />
             </div>
 
-            {/* TAP TO OPEN (same action as tapping the lock) */}
-            <div className="mt-6 flex justify-center">
+            {/* TAP TO OPEN (same action as tapping the lock) — fades away once
+                opening starts instead of relabeling to "Opening", so the flap's
+                own text is the only "opening" message shown */}
+            <motion.div
+              className="mt-6 flex justify-center"
+              animate={{ opacity: opening ? 0 : 1 }}
+              transition={{ duration: 0.4 }}
+            >
               <button
                 type="button"
                 onClick={handleOpen}
@@ -195,39 +203,30 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
                 className="group relative overflow-hidden rounded-full border border-accent/60 bg-gradient-to-b from-[oklch(0.95_0.05_88)] to-[oklch(0.86_0.08_82)] px-8 py-3.5 text-[0.68rem] font-medium uppercase tracking-[0.34em] text-accent-foreground shadow-[0_14px_30px_-14px_oklch(0.7_0.09_82/0.8)] transition-transform active:scale-[0.97] disabled:opacity-70"
                 style={{ animation: 'soft-glow 2.8s ease-in-out infinite' }}
               >
-                <span className="relative z-10">
-                  {opening ? 'Opening' : 'Tap to Open'}
-                </span>
+                <span className="relative z-10">Tap to Open</span>
                 <span
                   aria-hidden="true"
                   className="absolute inset-y-0 w-1/3 bg-white/45 blur-md"
                   style={{ animation: 'shimmer-sweep 3.2s ease-in-out infinite' }}
                 />
               </button>
-            </div>
-          </div>
+            </motion.div>
+          </motion.div>
 
-          {/* ─ card cover that swings open in 3D — shows the A&K heart lock unlocking + the same message ─ */}
+          {/* ─ card cover that swings open in 3D — shows the A&K heart lock unlocking
+              + the same message. This is the ONLY unlock animation shown. ─ */}
           <AnimatePresence>
             {opening && (
               <motion.div
-                className="absolute inset-0 origin-left overflow-hidden rounded-2xl border border-accent/50 bg-gradient-to-br from-[oklch(0.94_0.03_235)] via-[oklch(0.98_0.012_90)] to-[oklch(0.9_0.045_238)] shadow-[0_30px_70px_-30px_oklch(0.5_0.08_240/0.6)]"
+                className="absolute inset-0 origin-left overflow-hidden rounded-2xl border border-accent/50 bg-gradient-to-br from-[oklch(0.94_0.03_235)] via-[oklch(0.98_0.012_90)] to-[oklch(0.9_0.045_238)] px-8 py-9 shadow-[0_30px_70px_-30px_oklch(0.5_0.08_240/0.6)]"
                 initial={{ rotateY: 0 }}
                 animate={{ rotateY: -155 }}
                 exit={{ opacity: 0 }}
-                transition={{ duration: 2.1, delay: 0.55, ease: [0.65, 0, 0.35, 1] }}
+                transition={{ duration: 3.2, delay: 0.55, ease: [0.65, 0, 0.35, 1] }}
                 style={{ transformStyle: 'preserve-3d', backfaceVisibility: 'hidden' }}
               >
-                <div className="flex h-full flex-col items-center justify-center gap-5 px-6 text-center">
+                <div className="flex h-full flex-col items-center justify-center gap-5 text-center">
                   <OpeningHeartLock />
-                  <motion.p
-                    className="font-serif text-[1.35rem] font-light italic leading-snug text-foreground/85"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.9, duration: 0.9 }}
-                  >
-                    A Beautiful Story Awaits...
-                  </motion.p>
                 </div>
               </motion.div>
             )}
@@ -238,12 +237,14 @@ export function LockedInvitation({ onOpened }: { onOpened: () => void }) {
   )
 }
 
-/* ── Golden HEART lock with A&K monogram ─────────────────── */
+/* ── Golden HEART lock with A&K monogram — always the idle/static version now,
+   the unlocking motion lives only in OpeningHeartLock inside the flap ─────── */
 function HeartLock({ opening }: { opening: boolean }) {
   return (
     <div className="relative flex flex-col items-center">
-      {/* shackle */}
-     <motion.div
+      {/* shackle — pops open the moment the card is tapped, so the heart
+          reads as unlocked here too (matching the flap's unlocked heart) */}
+      <motion.div
         className="relative z-0 h-9 w-12 rounded-t-full border-[5px] border-b-0"
         style={{
           borderColor: 'oklch(0.82 0.09 82)',
@@ -252,14 +253,10 @@ function HeartLock({ opening }: { opening: boolean }) {
         }}
         animate={
           opening
-            ? { rotate: [0, -14, -60], x: [0, 2, 9], y: [0, -1, -7] }
+            ? { rotate: -55, x: 9, y: -7 }
             : { rotate: 0, x: 0, y: 0 }
         }
-        transition={
-          opening
-            ? { duration: 1, delay: 0.15, times: [0, 0.35, 1], ease: 'easeInOut' }
-            : { duration: 0.4 }
-        }
+        transition={{ duration: 0.6, ease: 'easeInOut' }}
       />
 
       {/* heart body */}
@@ -310,14 +307,16 @@ function HeartLock({ opening }: { opening: boolean }) {
             </tspan>
             <tspan dx="1">K</tspan>
           </text>
-          {/* tiny keyhole */}
+          {/* tiny keyhole — stem disappears once unlocked, matching the flap's open look */}
           <circle cx="50" cy="68" r="3.2" fill="oklch(0.55 0.07 70)" />
-          <path
-            d="M50 70.5v5"
-            stroke="oklch(0.55 0.07 70)"
-            strokeWidth="2.6"
-            strokeLinecap="round"
-          />
+          {!opening && (
+            <path
+              d="M50 70.5v5"
+              stroke="oklch(0.55 0.07 70)"
+              strokeWidth="2.6"
+              strokeLinecap="round"
+            />
+          )}
         </svg>
       </div>
     </div>
@@ -339,7 +338,7 @@ function OpeningHeartLock() {
 
       {/* shackle popping open */}
       <motion.div
-        className="relative z-0 h-8 w-10 rounded-t-full border-[4px] border-b-0"
+        className="relative z-0 h-9 w-12 rounded-t-full border-[5px] border-b-0"
         style={{
           borderColor: 'oklch(0.82 0.09 82)',
           boxShadow: 'inset 0 2px 3px oklch(1 0 0 / 0.7)',
@@ -347,15 +346,15 @@ function OpeningHeartLock() {
         }}
         initial={{ rotate: 0, x: 0, y: 0 }}
         animate={{ rotate: [0, -12, -55], x: [0, 2, 8], y: [0, -1, -6] }}
-        transition={{ duration: 1.1, delay: 0.3, times: [0, 0.35, 1], ease: 'easeInOut' }}
+        transition={{ duration: 1.6, delay: 0.5, times: [0, 0.35, 1], ease: 'easeInOut' }}
       />
 
       {/* heart body */}
       <motion.div
-        className="relative -mt-1.5 size-24"
+        className="relative -mt-2 size-[7.5rem]"
         initial={{ scale: 0.9, opacity: 0.6 }}
         animate={{ scale: [0.9, 1.08, 1], opacity: 1 }}
-        transition={{ duration: 1.2, delay: 0.5, ease: [0.34, 1.56, 0.64, 1] }}
+        transition={{ duration: 1.6, delay: 0.75, ease: [0.34, 1.56, 0.64, 1] }}
       >
         <svg viewBox="0 0 100 100" className="size-full" aria-hidden="true">
           <defs>
