@@ -134,7 +134,7 @@ function DateCountdown() {
   )
 }
 /* golden confetti burst, fired from the left/right edge once the date is fully revealed */
-function CelebrationBurst({ side }: { side: 'left' | 'right' }) {
+function CelebrationBurst({ side, top = '40%' }: { side: 'left' | 'right'; top?: string }) {
   const dirSign = side === 'left' ? 1 : -1
   const originX = side === 'left' ? '4%' : '96%'
   const shapes = ['❀', '✦', '✧', '●', '❁', '✺']
@@ -177,7 +177,7 @@ function CelebrationBurst({ side }: { side: 'left' | 'right' }) {
         <motion.span
           key={i}
           className="absolute text-lg sm:text-2xl"
-          style={{ left: originX, top: '40%', color: p.color }}
+          style={{ left: originX, top, color: p.color }}
           initial={{ x: 0, y: 0, opacity: 0, scale: 0.3, rotate: 0 }}
           animate={{
             x: p.x,
@@ -194,6 +194,26 @@ function CelebrationBurst({ side }: { side: 'left' | 'right' }) {
     </motion.div>
   )
 }
+
+/*
+ * Static background — the revealdate.png template image, shown as-is
+ * with no animation, tint, or overlay on top of it.
+ */
+function RevealBackground() {
+  return (
+    <div
+      aria-hidden="true"
+      className="absolute inset-0 z-0"
+      style={{
+        backgroundImage: 'url(/media/revealdate.png)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
+      }}
+    />
+  )
+}
+
 /**
  * Screen 5 — the date lives inside three scratchable hearts.
  * Names stay visible; when all three hearts are scratched the story
@@ -209,6 +229,7 @@ export function ScratchReveal({
   const [open, setOpen] = useState<[boolean, boolean, boolean]>([false, false, false])
   const allOpen = open.every(Boolean)
   const doneRef = useRef(false)
+  const [burstKey, setBurstKey] = useState(0)
 
   const markOpen = useCallback((i: number) => {
     setOpen((prev) => {
@@ -219,12 +240,16 @@ export function ScratchReveal({
     })
   }, [])
 
-  /* the date is revealed -> 2 seconds later the story continues on its own */
+  /* the date is revealed -> a 2nd burst near the countdown at 2s -> onDone at 4s */
   useEffect(() => {
     if (!allOpen || doneRef.current) return
     doneRef.current = true
-    const t = window.setTimeout(onDone, 3000)
-    return () => window.clearTimeout(t)
+    const burstTimer = window.setTimeout(() => setBurstKey((k) => k + 1), 2000)
+    const doneTimer = window.setTimeout(onDone, 4000)
+    return () => {
+      window.clearTimeout(burstTimer)
+      window.clearTimeout(doneTimer)
+    }
   }, [allOpen, onDone])
 
   const parts = [
@@ -237,39 +262,58 @@ export function ScratchReveal({
     <motion.div
       className={
         embedded
-          ? 'absolute inset-0 z-40 flex flex-col items-center justify-center px-5'
-          : 'fixed inset-0 z-[52] flex flex-col items-center justify-center px-5'
+          ? 'absolute inset-0 z-40 flex flex-col items-center justify-start overflow-hidden px-5 pt-12 sm:pt-16'
+          : 'fixed inset-0 z-[52] flex flex-col items-center justify-start overflow-hidden px-5 pt-12 sm:pt-16'
       }
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0, y: -24 }}
       transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-      style={
-        embedded
-          ? undefined
-          : {
-              background:
-                'linear-gradient(180deg, oklch(0.9 0.05 236) 0%, oklch(0.96 0.02 234) 45%, oklch(0.99 0.008 90) 100%)',
-            }
-      }
     >
-       {/* celebration bursts, left & right, once all three hearts are open */}
+      {/* revealdate.png background, sits behind everything */}
+      <RevealBackground />
+
+      {/* celebration bursts: 1st near the hearts (burstKey 0), 2nd near the countdown (burstKey 1) */}
       <AnimatePresence>
         {allOpen && (
-          <>
-            <CelebrationBurst side="left" />
-            <CelebrationBurst side="right" />
-          </>
+          <div key={burstKey}>
+            <CelebrationBurst side="left" top={burstKey === 0 ? '40%' : '78%'} />
+            <CelebrationBurst side="right" top={burstKey === 0 ? '40%' : '78%'} />
+          </div>
         )}
       </AnimatePresence>
-      <div className="flex w-full max-w-md flex-col items-center text-center">
+      <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
+        {/* ── || श्री गणेशाय नमः || — golden invocation ── */}
+        <motion.p
+          className="text-[0.8rem] font-medium tracking-[0.08em] sm:text-base"
+          style={{ color: 'var(--gold)' }}
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.8 }}
+        >
+          || श्री गणेशाय नमः ||
+        </motion.p>
+
+        {/* ── invitation line, normal (non-gold) text color ── */}
+        <motion.p
+          className="mt-3 text-[0.62rem] text-muted-foreground tracking-[0.28em] sm:text-xs"
+          style={{ color: 'oklch(0.4 0.03 60)' }}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 1, ease: 'easeOut' }}
+        >
+          You are invited to
+          <br />
+          the wedding of
+        </motion.p>
+
         {/* ── names: always visible, never scratched ── */}
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3, duration: 0.9 }}
         >
-          <p className="font-serif text-[2rem] font-light leading-tight text-foreground drop-shadow-[0_2px_10px_oklch(1_0_0/0.7)] sm:text-4xl">
+          <p className="mt-3 font-serif text-[2rem] font-light leading-tight text-foreground drop-shadow-[0_2px_10px_oklch(1_0_0/0.7)] sm:text-4xl">
             {wedding.groom}
             <span className="mx-2" style={{ color: 'oklch(0.74 0.1 76)' }}>
               &hearts;
@@ -282,18 +326,33 @@ export function ScratchReveal({
           </p>
         </motion.div>
 
-        {/* ── the three date hearts ── */}
-        <div className="mt-9 flex items-end justify-center gap-3 sm:gap-5">
-          {parts.map((p, i) => (
+        {/* ── the three date hearts, arranged in a V: Day / Month on top, Year below-center ── */}
+        <div className="mt-9 flex flex-col items-center">
+          <div className="flex items-end justify-center gap-5 sm:gap-8">
             <HeartScratch
-              key={p.label}
-              value={p.value}
-              label={p.label}
-              delay={0.5 + i * 0.16}
-              opened={open[i]}
-              onOpen={() => markOpen(i)}
+              value={parts[0].value}
+              label={parts[0].label}
+              delay={0.5}
+              opened={open[0]}
+              onOpen={() => markOpen(0)}
             />
-          ))}
+            <HeartScratch
+              value={parts[1].value}
+              label={parts[1].label}
+              delay={0.66}
+              opened={open[1]}
+              onOpen={() => markOpen(1)}
+            />
+          </div>
+          <div className="-mt-3 sm:-mt-4">
+            <HeartScratch
+              value={parts[2].value}
+              label={parts[2].label}
+              delay={0.82}
+              opened={open[2]}
+              onOpen={() => markOpen(2)}
+            />
+          </div>
         </div>
 
         <AnimatePresence mode="wait">
@@ -305,7 +364,7 @@ export function ScratchReveal({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.9 }}
             >
-              <p className="mt-8 font-serif text-lg font-light italic text-foreground/85">
+              <p className="mt-3 font-serif text-lg font-light italic text-foreground/85">
                 Save Our Date &mdash; We Cannot Wait...
               </p>
               <DateCountdown />
@@ -313,7 +372,7 @@ export function ScratchReveal({
           ) : (
             <motion.p
               key="hint"
-              className="mt-8 text-[0.65rem] uppercase tracking-[0.3em] text-muted-foreground"
+              className="mt-7 max-w-[15rem] text-[0.6rem] uppercase leading-relaxed tracking-[0.18em] text-muted-foreground sm:max-w-none sm:text-[0.65rem] sm:tracking-[0.24em]"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -515,7 +574,7 @@ function HeartScratch({
 
       <div
         ref={wrapRef}
-        className="relative size-[6.4rem] touch-none select-none sm:size-32"
+        className="relative size-24 touch-none select-none sm:size-28"
         style={{
           maskImage: HEART_MASK,
           WebkitMaskImage: HEART_MASK,
@@ -536,8 +595,8 @@ function HeartScratch({
           <span
             className={
               label === 'Month'
-                ? 'font-serif text-xl font-medium tracking-[0.06em] sm:text-2xl'
-                : 'font-serif text-2xl font-light sm:text-3xl'
+                ? 'font-serif text-sm font-medium tracking-[0.04em] sm:text-lg'
+                : 'font-serif text-lg font-light sm:text-xl'
             }
             style={{ color: 'oklch(0.42 0.06 68)' }}
           >
