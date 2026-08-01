@@ -181,6 +181,22 @@
     transform: rotate(360deg);
   }
 }
+@keyframes confetti-burst {
+  0% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(0.5);
+  }
+  10% {
+    opacity: 1;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--cx), var(--cy)) rotate(var(--crot)) scale(1);
+  }
+}
 
 @media (prefers-reduced-motion: reduce) {
   *,

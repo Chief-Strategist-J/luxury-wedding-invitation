@@ -114,6 +114,89 @@ export function Sparkles({
   )
 }
 
+/* ── Confetti burst (paper piece explosion, from a side) ──── */
+export function ConfettiBurst({
+  count = 140,
+  side = 'left',
+  originY = '50%',
+  loop = true,
+  className,
+}:{
+  count?: number
+  side?: 'left' | 'right'
+  originY?: string
+  loop?: boolean
+  className?: string
+}) {
+   const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  const dir = side === 'left' ? 1 : -1
+
+  const pieces = useMemo(
+    () =>
+       Array.from({ length: count }, (_, i) => {
+        // spread mostly horizontal (across screen) with vertical scatter
+        const spreadX = (260 + ((i * 53) % 620)) * dir
+        const spreadY = ((i % 2 === 0 ? 1 : -1) * (40 + ((i * 37) % 340)))
+        return {
+          id: i,
+          x: spreadX,
+          y: spreadY,
+          startY: ((i * 19) % 70) - 35, // scatter starting height near origin
+          rotate: ((i % 2 === 0 ? 1 : -1) * (i * 61)) % 900,
+          delay: (i * 0.045) % 3.5,
+          duration: 4.5 + ((i * 0.09) % 3.5),
+          size: 6 + ((i * 3) % 10),
+          hue: i % 6,
+          shape: i % 3 === 0 ? 'circle' : 'rect',
+        }
+      }),
+    [count, dir],
+  )
+
+  if (!mounted) return null
+ const colors = [
+    'oklch(0.75 0.18 25)',
+    'oklch(0.8 0.16 85)',
+    'oklch(0.7 0.15 200)',
+    'oklch(0.72 0.2 320)',
+    'oklch(0.85 0.12 60)',
+    'oklch(0.68 0.19 250)',
+  ]
+
+ return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        'pointer-events-none absolute inset-0 overflow-hidden',
+        className,
+      )}
+    >
+      {pieces.map((p) => (
+        <span
+          key={p.id}
+          className="absolute block"
+          style={{
+            left: side === 'left' ? '0%' : '100%',
+            top: originY,
+            marginTop: p.startY,
+            width: p.shape === 'rect' ? p.size : p.size * 0.8,
+            height: p.shape === 'rect' ? p.size * 0.4 : p.size * 0.8,
+            backgroundColor: colors[p.hue],
+            borderRadius: p.shape === 'circle' ? '50%' : '2px',
+            opacity: 0,
+            ['--cx' as string]: `${p.x}px`,
+            ['--cy' as string]: `${p.y}px`,
+            ['--crot' as string]: `${p.rotate}deg`,
+            animation: `confetti-burst ${p.duration}s cubic-bezier(0.16,1,0.3,1) ${p.delay}s ${loop ? 'infinite' : '1'}`,
+            animationFillMode: 'forwards',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
 /* ── Thin gold divider with a diamond ─────────────────────── */
 export function GoldDivider({ className }: { className?: string }) {
   return (

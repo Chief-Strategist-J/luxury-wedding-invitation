@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'motion/react'
 import { useEffect, useState } from 'react'
 import Image from 'next/image'
-import { Petals, Sparkles, GoldDivider } from '@/components/decor'
+import { Petals, Sparkles } from '@/components/decor'
 import { wedding } from '@/lib/wedding-config'
 
 const NAMAH = '॥ श्री गणेशाय नमः ॥'
@@ -99,7 +99,7 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
       {/* blank decorative template as the full background */}
       <div className="absolute inset-0">
         <Image
-          src="/media/balnk-templates.png"
+          src="/media/blank-templates.png"
           alt="Decorative wedding invitation background"
           fill
           priority
@@ -224,10 +224,18 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
             </motion.div>
           )}
 
-          {/* golden divider, then bride's name — highlighted in gold, then "daughter of" + parents */}
+          {/* gathbandhan image, then bride's name — highlighted in gold, then "daughter of" + parents */}
           {showBride && (
             <>
-              <GoldDivider className="mt-2" />
+              <div className="relative mt-2 h-10 w-48 sm:h-12 sm:w-56">
+                <Image
+                  src="/media/gathbandhan.png"
+                  alt="Gathbandhan"
+                  fill
+                  sizes="224px"
+                  className="object-contain"
+                />
+              </div>
               <motion.div
                 className="mt-2 flex flex-col items-center gap-0.5"
                 initial={{ opacity: 0, y: 8 }}
