@@ -114,16 +114,16 @@ export function Sparkles({
   )
 }
 
-/* ── Confetti burst (paper piece explosion, from a side) ──── */
+/* ── Confetti burst (paper piece explosion) ───────────────── */
 export function ConfettiBurst({
-  count = 140,
-  side = 'left',
-  originY = '50%',
+  count = 90,
+  originX = '50%',
+  originY = '0%',
   loop = true,
   className,
-}:{
+}: {
   count?: number
-  side?: 'left' | 'right'
+  originX?: string
   originY?: string
   loop?: boolean
   className?: string
@@ -131,31 +131,28 @@ export function ConfettiBurst({
    const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
-  const dir = side === 'left' ? 1 : -1
-
   const pieces = useMemo(
     () =>
        Array.from({ length: count }, (_, i) => {
-        // spread mostly horizontal (across screen) with vertical scatter
-        const spreadX = (260 + ((i * 53) % 620)) * dir
-        const spreadY = ((i % 2 === 0 ? 1 : -1) * (40 + ((i * 37) % 340)))
+        const angle = ((i * 137.5) % 360) * (Math.PI / 180)
+        const spread = 40 + ((i * 53) % 300)
         return {
           id: i,
-          x: spreadX,
-          y: spreadY,
-          startY: ((i * 19) % 70) - 35, // scatter starting height near origin
-          rotate: ((i % 2 === 0 ? 1 : -1) * (i * 61)) % 900,
-          delay: (i * 0.045) % 3.5,
-          duration: 4.5 + ((i * 0.09) % 3.5),
-          size: 6 + ((i * 3) % 10),
+          x: Math.cos(angle) * spread,
+          y: 200 + ((i * 29) % 260),
+          rotate: ((i % 2 === 0 ? 1 : -1) * (i * 47)) % 720,
+          delay: (i * 0.13) % 2.5,
+          duration: 1.8 + ((i * 0.07) % 1.4),
+          size: 6 + ((i * 3) % 8),
           hue: i % 6,
-          shape: i % 3 === 0 ? 'circle' : 'rect',
+          shape: i % 2 === 0 ? 'rect' : 'circle',
         }
       }),
-    [count, dir],
+    [count],
   )
 
   if (!mounted) return null
+
  const colors = [
     'oklch(0.75 0.18 25)',
     'oklch(0.8 0.16 85)',
@@ -178,9 +175,8 @@ export function ConfettiBurst({
           key={p.id}
           className="absolute block"
           style={{
-            left: side === 'left' ? '0%' : '100%',
+            left: originX,
             top: originY,
-            marginTop: p.startY,
             width: p.shape === 'rect' ? p.size : p.size * 0.8,
             height: p.shape === 'rect' ? p.size * 0.4 : p.size * 0.8,
             backgroundColor: colors[p.hue],
@@ -197,6 +193,7 @@ export function ConfettiBurst({
     </div>
   )
 }
+
 /* ── Thin gold divider with a diamond ─────────────────────── */
 export function GoldDivider({ className }: { className?: string }) {
   return (
