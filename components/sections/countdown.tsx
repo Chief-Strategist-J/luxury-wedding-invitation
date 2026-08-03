@@ -1,8 +1,8 @@
 'use client'
 
-import { motion } from 'motion/react'
+import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useState } from 'react'
-import { Eyebrow, GoldDivider, Sparkles } from '@/components/decor'
+import { CelebrationBurst, Eyebrow, GoldDivider, Sparkles } from '@/components/decor'
 import { wedding } from '@/lib/wedding-config'
 
 function diff(target: number) {
@@ -19,6 +19,7 @@ export function Countdown() {
   const target = new Date(wedding.date).getTime()
   const [t, setT] = useState({ days: 0, hours: 0, minutes: 0, seconds: 0 })
   const [mounted, setMounted] = useState(false)
+  const [burst, setBurst] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -44,6 +45,16 @@ export function Countdown() {
     >
       <Sparkles count={12} />
 
+      {/* one-shot celebration burst, fired once the countdown scrolls into view */}
+      <AnimatePresence>
+        {burst && (
+          <>
+            <CelebrationBurst side="left" top="35%" />
+            <CelebrationBurst side="right" top="35%" />
+          </>
+        )}
+      </AnimatePresence>
+
       {/* soft ornamental rings */}
       <div
         aria-hidden="true"
@@ -61,7 +72,11 @@ export function Countdown() {
         </h2>
         <GoldDivider className="mt-6" />
 
-        <div className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6">
+        <motion.div
+          className="mt-10 grid grid-cols-2 gap-4 sm:grid-cols-4 sm:gap-6"
+          onViewportEnter={() => setBurst(true)}
+          viewport={{ once: true, amount: 0.6 }}
+        >
           {cells.map((c, i) => (
             <motion.div
               key={c.label}
@@ -92,7 +107,7 @@ export function Countdown() {
               </span>
             </motion.div>
           ))}
-        </div>
+        </motion.div>
       </div>
     </section>
   )

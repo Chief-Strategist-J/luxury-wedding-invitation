@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
+import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 
 /* ── Floating flower petals ───────────────────────────────── */
@@ -205,6 +206,73 @@ export function GoldDivider({ className }: { className?: string }) {
       <span className="size-1.5 rotate-45 bg-accent" />
       <span className="gold-rule h-px w-16 sm:w-24" />
     </div>
+  )
+}
+/* ── Celebration burst: golden petals/stars bursting from a side edge ── */
+export function CelebrationBurst({
+  side,
+  top = '40%',
+}: {
+  side: 'left' | 'right'
+  top?: string
+}) {
+  const dirSign = side === 'left' ? 1 : -1
+  const originX = side === 'left' ? '4%' : '96%'
+  const shapes = ['❀', '✦', '✧', '●', '❁', '✺']
+  const colors = [
+    'var(--gold)',
+    'oklch(0.66 0.14 38)',
+    'oklch(0.82 0.09 82)',
+    'oklch(0.62 0.16 18)',
+    'oklch(0.88 0.07 90)',
+  ]
+
+  const particles = useMemo(
+    () =>
+      Array.from({ length: 18 }).map((_, i) => {
+        const angle = (Math.random() * 110 - 55) * (Math.PI / 180)
+        const dist = 110 + Math.random() * 190
+        return {
+          x: Math.cos(angle) * dist * dirSign,
+          y: -Math.abs(Math.sin(angle) * dist) - Math.random() * 50,
+          drop: 50 + Math.random() * 50,
+          delay: Math.random() * 0.3,
+          duration: 1.5 + Math.random() * 0.7,
+          rotate: dirSign * (110 + Math.random() * 200),
+          shape: shapes[i % shapes.length],
+          color: colors[i % colors.length],
+          scale: 0.7 + Math.random() * 0.6,
+        }
+      }),
+    [dirSign],
+  )
+
+  return (
+    <motion.div
+      className="pointer-events-none absolute inset-0 z-50 overflow-hidden"
+      initial={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.6 }}
+    >
+      {particles.map((p, i) => (
+        <motion.span
+          key={i}
+          className="absolute text-lg sm:text-2xl"
+          style={{ left: originX, top, color: p.color }}
+          initial={{ x: 0, y: 0, opacity: 0, scale: 0.3, rotate: 0 }}
+          animate={{
+            x: p.x,
+            y: [0, p.y, p.y + p.drop],
+            opacity: [0, 1, 1, 0],
+            scale: [0.3, p.scale, p.scale * 0.9],
+            rotate: p.rotate,
+          }}
+          transition={{ duration: p.duration, delay: p.delay, ease: 'easeOut' }}
+        >
+          {p.shape}
+        </motion.span>
+      ))}
+    </motion.div>
   )
 }
 

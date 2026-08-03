@@ -1,3 +1,8 @@
+const chapter1 = '/media/chapter-1.png'
+const chapter2 = '/media/chapter-2.png'
+const chapter3 = '/media/chapter-3.png'
+const chapter4 = '/media/chapter-4.png'
+
 // ─────────────────────────────────────────────────────────────
 // Single source of truth for the whole invitation.
 // Change values here and the entire website updates.
@@ -195,27 +200,28 @@ export const celebrations: Celebration[] = [
 ]
 
 // ── Story ────────────────────────────────────────────────────
+// NOTE: text/chapter are no longer rendered on top of the image —
+// the story text is already baked into chapter-1..4.png. They're
+// kept here only for the alt text / accessibility label.
 export const story = [
   {
-    chapter: 'The Beginning',
-    text: 'Some stories begin with a moment — a glance across a crowded room in Ahmedabad, and a conversation that never really ended.',
-    image: '/media/invitation-ceremony.jpeg',
+    chapter: 'A Beautiful Beginning',
+    text: 'Every beautiful journey begins with a moment we never planned. Two lives, two families, and two different paths came together in the most unexpected way. What started with a simple meeting slowly became a bond filled with laughter, understanding, and countless little moments that made our hearts feel at home.',
+    image: chapter1,
   },
   {
-    chapter: 'The Journey',
-    text: 'Some moments become memories — late night drives, festival lights, endless chai and a thousand ordinary days made golden.',
-    video: '/media/haldi-celebration.mp4',
-    poster: '/media/invitation-ceremony.jpeg',
+    chapter: 'Two Hearts, One Journey',
+    text: 'With every conversation, every celebration, and every shared dream, our bond grew stronger. We discovered joy in the simplest moments and found comfort in knowing that no matter where life took us, we would always have each other. Somewhere along the way, we realized that the best journeys are the ones taken together.',
+    image: chapter2,
   },
   {
-    chapter: 'The Moment',
-    text: 'Some memories become forever — one question, one trembling yes, and two families that became one.',
-    image: '/media/ballroom-dance.jpeg',
+    chapter: 'When Families Become One',
+    text: 'Love brought two hearts together, but blessings brought two families closer. With the warmth of our loved ones, the laughter of our families, and traditions passed down through generations, our journey became a celebration of something much greater — two families coming together to create one beautiful new beginning.',
+    image: chapter3,
   },
   {
-    chapter: 'Forever',
-    text: 'And now, our forever begins — with your blessings, in a hall full of flowers and the people we love most.',
-    video: '/media/sangeet-dance.mp4',
-    poster: '/media/ballroom-dance.jpeg',
+    chapter: 'The Beginning of Forever',
+    text: 'And now, with hearts full of gratitude and dreams filled with hope, we step into a new chapter of our lives. Surrounded by the people who mean the most to us, we invite you to celebrate the laughter, love, rituals, and memories that will make this day unforgettable. Our forever begins here — and we would be honored to have you with us.',
+    image: chapter4,
   },
 ] as const
