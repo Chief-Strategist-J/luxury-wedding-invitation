@@ -129,12 +129,12 @@ export function ConfettiBurst({
   loop?: boolean
   className?: string
 }) {
-   const [mounted, setMounted] = useState(false)
+  const [mounted, setMounted] = useState(false)
   useEffect(() => setMounted(true), [])
 
   const pieces = useMemo(
     () =>
-       Array.from({ length: count }, (_, i) => {
+      Array.from({ length: count }, (_, i) => {
         const angle = ((i * 137.5) % 360) * (Math.PI / 180)
         const spread = 40 + ((i * 53) % 300)
         return {
@@ -154,7 +154,7 @@ export function ConfettiBurst({
 
   if (!mounted) return null
 
- const colors = [
+  const colors = [
     'oklch(0.75 0.18 25)',
     'oklch(0.8 0.16 85)',
     'oklch(0.7 0.15 200)',
@@ -163,7 +163,7 @@ export function ConfettiBurst({
     'oklch(0.68 0.19 250)',
   ]
 
- return (
+  return (
     <div
       aria-hidden="true"
       className={cn(
@@ -413,6 +413,54 @@ export function SectionShell({
       {background}
       <div className="relative z-10 mx-auto w-full max-w-6xl">{children}</div>
     </section>
+  )
+}
+
+/* ── Heart marker for the story timeline ───────────────────── */
+export function HeartMark({
+  filled,
+  active,
+  className,
+}: {
+  filled?: boolean
+  active?: boolean
+  className?: string
+}) {
+  return (
+    <motion.span
+      aria-hidden="true"
+      animate={
+        active
+          ? { scale: [1, 1.22, 1, 1.12, 1] }
+          : { scale: 1 }
+      }
+      transition={
+        active
+          ? { duration: 1.1, repeat: Infinity, ease: 'easeInOut' }
+          : { duration: 0.3 }
+      }
+      className={cn(
+        'relative flex size-9 shrink-0 items-center justify-center rounded-full border bg-card transition-all duration-500',
+        filled
+          ? 'border-accent/70 shadow-[0_0_0_5px_oklch(0.86_0.09_85/0.16)]'
+          : 'border-accent/30',
+        className,
+      )}
+    >
+      <svg viewBox="0 0 24 24" className="size-[19px]" fill="none">
+        <path
+          d="M12 20.4s-7.4-4.5-7.4-9.6A4.25 4.25 0 0 1 12 8a4.25 4.25 0 0 1 7.4 2.8c0 5.1-7.4 9.6-7.4 9.6Z"
+          fill={filled ? 'var(--gold, oklch(0.8 0.11 85))' : 'transparent'}
+          stroke={
+            filled
+              ? 'var(--gold, oklch(0.8 0.11 85))'
+              : 'var(--gold-soft, oklch(0.87 0.05 88))'
+          }
+          strokeWidth="1.5"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </motion.span>
   )
 }
 

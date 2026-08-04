@@ -200,28 +200,11 @@ export const celebrations: Celebration[] = [
 ]
 
 // ── Story ────────────────────────────────────────────────────
-// NOTE: text/chapter are no longer rendered on top of the image —
-// the story text is already baked into chapter-1..4.png. They're
-// kept here only for the alt text / accessibility label.
-export const story = [
-  {
-    chapter: 'A Beautiful Beginning',
-    text: 'Every beautiful journey begins with a moment we never planned. Two lives, two families, and two different paths came together in the most unexpected way. What started with a simple meeting slowly became a bond filled with laughter, understanding, and countless little moments that made our hearts feel at home.',
-    image: chapter1,
-  },
-  {
-    chapter: 'Two Hearts, One Journey',
-    text: 'With every conversation, every celebration, and every shared dream, our bond grew stronger. We discovered joy in the simplest moments and found comfort in knowing that no matter where life took us, we would always have each other. Somewhere along the way, we realized that the best journeys are the ones taken together.',
-    image: chapter2,
-  },
-  {
-    chapter: 'When Families Become One',
-    text: 'Love brought two hearts together, but blessings brought two families closer. With the warmth of our loved ones, the laughter of our families, and traditions passed down through generations, our journey became a celebration of something much greater — two families coming together to create one beautiful new beginning.',
-    image: chapter3,
-  },
-  {
-    chapter: 'The Beginning of Forever',
-    text: 'And now, with hearts full of gratitude and dreams filled with hope, we step into a new chapter of our lives. Surrounded by the people who mean the most to us, we invite you to celebrate the laughter, love, rituals, and memories that will make this day unforgettable. Our forever begins here — and we would be honored to have you with us.',
-    image: chapter4,
-  },
+// The story copy is already baked into /media/chapter-1..4.png,
+// so only the image list lives here (used for the stacked scroll).
+export const storyChapters = [
+  { image: chapter1, label: 'A Beautiful Beginning' },
+  { image: chapter2, label: 'Two Hearts, One Journey' },
+  { image: chapter3, label: 'When Families Become One' },
+  { image: chapter4, label: 'The Beginning of Forever' },
 ] as const
