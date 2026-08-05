@@ -53,13 +53,84 @@ export type MediaItem = {
   id: string
   type: 'image' | 'video'
   src: string
+  /** Poster frame, used when `type === 'video'`. */
   poster?: string
   title: string
   caption?: string
   orientation: 'portrait' | 'landscape'
+  /** Year badge printed on the memory card (optional). */
+  year?: string
+  /** Small line under the caption, e.g. place + date (optional). */
+  meta?: string
 }
 
+/**
+ * Story timeline. The Memories ring renders only `type === 'image'`,
+ * the video entries stay here so the films/lightbox keep working.
+ */
 export const memories: MediaItem[] = [
+  {
+    id: 'first-date',
+    type: 'image',
+    src: '/memories/first-date.png',
+    title: 'First Date',
+    caption:
+      'Two coffees, one shared dessert and a conversation that refused to end.',
+    orientation: 'portrait',
+    year: '2019',
+    meta: 'Blue Tokai, Ahmedabad · 14 Feb',
+  },
+  {
+    id: 'road-trip',
+    type: 'image',
+    src: '/memories/road-trip.png',
+    title: 'The Road Trip',
+    caption:
+      'Wrong turns, one playlist on repeat, and a sunset we still talk about.',
+    orientation: 'portrait',
+    year: '2021',
+    meta: 'Saputara Ghats · Nov',
+  },
+  {
+    id: 'proposal',
+    type: 'image',
+    src: '/memories/proposal.png',
+    title: 'The Proposal',
+    caption: 'Fairy lights, shaking hands and a yes before the question ended.',
+    orientation: 'portrait',
+    year: '2023',
+    meta: 'Rooftop at home · 09 Dec',
+  },
+  {
+    id: 'engagement',
+    type: 'image',
+    src: '/memories/engagement.png',
+    title: 'Engagement',
+    caption: 'Rings exchanged, both families finally in one loud, happy room.',
+    orientation: 'portrait',
+    year: '2024',
+    meta: 'The Grand Hall · 21 Jan',
+  },
+  {
+    id: 'invite-photo',
+    type: 'image',
+    src: '/media/invitation-ceremony.jpeg',
+    title: 'Lagan Lekhan',
+    caption: 'The first card, written with blessings.',
+    orientation: 'portrait',
+    year: '2026',
+    meta: 'Patel Residence · 07 Dec',
+  },
+  {
+    id: 'couple',
+    type: 'image',
+    src: '/media/couple-portrait.png',
+    title: 'Arnav & Kiara',
+    caption: 'Two hearts, one beautiful story.',
+    orientation: 'portrait',
+    year: '2026',
+    meta: 'Grand Mandap · 12 Dec',
+  },
   {
     id: 'ballroom',
     type: 'image',
@@ -67,6 +138,8 @@ export const memories: MediaItem[] = [
     title: 'The First Dance',
     caption: 'Under a thousand candles, the world went quiet.',
     orientation: 'portrait',
+    year: '2026',
+    meta: 'Crystal Ballroom · 11 Dec',
   },
   {
     id: 'sangeet',
@@ -76,14 +149,7 @@ export const memories: MediaItem[] = [
     title: 'Sangeet Night',
     caption: 'Music, laughter and a floor full of family.',
     orientation: 'portrait',
-  },
-  {
-    id: 'invite-photo',
-    type: 'image',
-    src: '/media/invitation-ceremony.jpeg',
-    title: 'Lagan Lekhan',
-    caption: 'The first card, written with blessings.',
-    orientation: 'portrait',
+    year: '2026',
   },
   {
     id: 'haldi',
@@ -93,14 +159,7 @@ export const memories: MediaItem[] = [
     title: 'Haldi Ceremony',
     caption: 'Turmeric, marigolds and golden light.',
     orientation: 'portrait',
-  },
-  {
-    id: 'couple',
-    type: 'image',
-    src: '/media/couple-portrait.png',
-    title: 'Arnav & Kiara',
-    caption: 'Two hearts, one beautiful story.',
-    orientation: 'portrait',
+    year: '2026',
   },
   {
     id: 'invite-video',
@@ -110,6 +169,7 @@ export const memories: MediaItem[] = [
     title: 'Invitation Ceremony',
     caption: 'Placing the first invitation at His feet.',
     orientation: 'portrait',
+    year: '2026',
   },
 ]
 

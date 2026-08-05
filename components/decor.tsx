@@ -4,7 +4,12 @@ import { useEffect, useMemo, useState } from 'react'
 import { motion } from 'motion/react'
 import { cn } from '@/lib/utils'
 
-/* ── Floating flower petals ───────────────────────────────── */
+/* ── Floating flower petals ───────────────────────────────────
+   FIX: petals used to hang at the very top of the section
+   ("latka hua") because they were positioned at top-0 and the
+   fall animation never moved them. They now start ABOVE the
+   section (-12vh) and travel all the way past the bottom, with
+   sway + spin, so they always look like they are falling.      */
 export function Petals({
   count = 14,
   className,
@@ -19,10 +24,12 @@ export function Petals({
     () =>
       Array.from({ length: count }, (_, i) => ({
         left: (i * 97) % 100,
-        delay: (i * 1.37) % 12,
-        duration: 11 + ((i * 3.1) % 9),
+        // negative delays => some petals are already mid-fall on first paint
+        delay: -((i * 1.37) % 12),
+        duration: 13 + ((i * 3.1) % 9),
         size: 7 + ((i * 5) % 9),
         drift: ((i % 5) - 2) * 46,
+        spin: (i % 2 === 0 ? 1 : -1) * (360 + ((i * 37) % 260)),
         hue: i % 3,
       })),
     [count],
@@ -41,7 +48,7 @@ export function Petals({
       {petals.map((p, i) => (
         <span
           key={i}
-          className="absolute top-0 block rounded-[100%_0_100%_0]"
+          className="absolute top-0 block rounded-[100%_0_100%_0] will-change-transform"
           style={{
             left: `${p.left}%`,
             width: p.size,
@@ -53,7 +60,9 @@ export function Petals({
                   ? 'oklch(0.9 0.045 20 / 0.8)'
                   : 'oklch(0.9 0.05 235 / 0.85)',
             boxShadow: '0 1px 6px oklch(0.75 0.06 240 / 0.35)',
+            opacity: 0,
             ['--drift' as string]: `${p.drift}px`,
+            ['--spin' as string]: `${p.spin}deg`,
             animation: `petal-fall ${p.duration}s linear ${p.delay}s infinite`,
           }}
         />
@@ -78,7 +87,7 @@ export function Sparkles({
       Array.from({ length: count }, (_, i) => ({
         left: (i * 61) % 100,
         top: (i * 43) % 100,
-        delay: (i * 0.71) % 6,
+        delay: -((i * 0.71) % 6),
         duration: 4 + ((i * 1.3) % 5),
         size: 2 + ((i * 3) % 4),
         drift: ((i % 4) - 1.5) * 24,
@@ -99,7 +108,7 @@ export function Sparkles({
       {dots.map((d, i) => (
         <span
           key={i}
-          className="absolute block rounded-full bg-accent"
+          className="absolute block rounded-full bg-accent will-change-transform"
           style={{
             left: `${d.left}%`,
             top: `${d.top}%`,
@@ -108,6 +117,63 @@ export function Sparkles({
             boxShadow: '0 0 10px 2px oklch(0.86 0.09 85 / 0.75)',
             ['--drift' as string]: `${d.drift}px`,
             animation: `sparkle-float ${d.duration}s ease-in-out ${d.delay}s infinite`,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
+/* ── Slow drifting gold dust (used behind the Memories ring) ── */
+export function GoldDust({
+  count = 26,
+  className,
+}: {
+  count?: number
+  className?: string
+}) {
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => setMounted(true), [])
+
+  const specks = useMemo(
+    () =>
+      Array.from({ length: count }, (_, i) => ({
+        left: (i * 37) % 100,
+        top: (i * 71) % 100,
+        size: 1.5 + ((i * 7) % 3),
+        rise: -60 - ((i * 13) % 90),
+        drift: ((i % 6) - 2.5) * 26,
+        duration: 9 + ((i * 1.7) % 8),
+        delay: -((i * 0.9) % 10),
+      })),
+    [count],
+  )
+
+  if (!mounted) return null
+
+  return (
+    <div
+      aria-hidden="true"
+      className={cn(
+        'pointer-events-none absolute inset-0 overflow-hidden',
+        className,
+      )}
+    >
+      {specks.map((s, i) => (
+        <span
+          key={i}
+          className="absolute block rounded-full will-change-transform"
+          style={{
+            left: `${s.left}%`,
+            top: `${s.top}%`,
+            width: s.size,
+            height: s.size,
+            background: 'var(--gold)',
+            boxShadow: '0 0 8px 1px oklch(0.86 0.09 85 / 0.5)',
+            opacity: 0,
+            ['--rise' as string]: `${s.rise}px`,
+            ['--drift' as string]: `${s.drift}px`,
+            animation: `gold-dust ${s.duration}s ease-in-out ${s.delay}s infinite`,
           }}
         />
       ))}
@@ -208,6 +274,7 @@ export function GoldDivider({ className }: { className?: string }) {
     </div>
   )
 }
+
 /* ── Celebration burst: golden petals/stars bursting from a side edge ── */
 export function CelebrationBurst({
   side,
@@ -217,7 +284,6 @@ export function CelebrationBurst({
   top?: string
 }) {
   const dirSign = side === 'left' ? 1 : -1
-  const originX = side === 'left' ? '4%' : '96%'
   const shapes = ['❀', '✦', '✧', '●', '❁', '✺']
   const colors = [
     'var(--gold)',
@@ -226,6 +292,7 @@ export function CelebrationBurst({
     'oklch(0.62 0.16 18)',
     'oklch(0.88 0.07 90)',
   ]
+  const originX = side === 'left' ? '4%' : '96%'
 
   const particles = useMemo(
     () =>
@@ -244,6 +311,7 @@ export function CelebrationBurst({
           scale: 0.7 + Math.random() * 0.6,
         }
       }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [dirSign],
   )
 
@@ -429,11 +497,7 @@ export function HeartMark({
   return (
     <motion.span
       aria-hidden="true"
-      animate={
-        active
-          ? { scale: [1, 1.22, 1, 1.12, 1] }
-          : { scale: 1 }
-      }
+      animate={active ? { scale: [1, 1.22, 1, 1.12, 1] } : { scale: 1 }}
       transition={
         active
           ? { duration: 1.1, repeat: Infinity, ease: 'easeInOut' }
