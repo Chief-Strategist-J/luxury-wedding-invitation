@@ -15,11 +15,39 @@ const ANGLE = 360 / COUNT
 /** Degrees per second — one slow, never-ending revolution. */
 const SPEED = 7.5
 
-/** Card + ring geometry per breakpoint (mobile first). */
+/** A long perspective keeps the front card from being blown up so much that
+ *  it swallows its neighbours on screen. */
+const PERSPECTIVE = 2200
+
+/** Card + ring geometry per breakpoint (mobile first).
+ *  The radius comes from the card width so neighbouring cards never touch:
+ *  the chord between two cards is 2 * radius * sin(ANGLE / 2), and we keep
+ *  that wider than a card by GAP_FACTOR. */
+const GAP_FACTOR = 1.16
+const chordRadius = (w: number) =>
+  Math.round((w * GAP_FACTOR) / (2 * Math.sin((ANGLE * Math.PI) / 360)))
+
+/** How much the nearest card is magnified by the perspective projection —
+ *  used to reserve enough stage height for it. */
+const frontScale = (radius: number) => PERSPECTIVE / (PERSPECTIVE - radius)
+
+function geo(w: number, h: number) {
+  const radius = chordRadius(w)
+  return {
+    w,
+    h,
+    radius,
+    /* frame + padding + floor reflection, magnified by the projection, plus
+       a little extra for the keystone of the two half-turned front cards, so
+       the ring never bleeds into the caption below. */
+    stage: Math.round((h + 26 + h * 0.3) * frontScale(radius) * 1.16),
+  }
+}
+
 const SIZES = {
-  xs: { w: 132, h: 172, radius: 150 },
-  sm: { w: 172, h: 222, radius: 210 },
-  lg: { w: 228, h: 292, radius: 300 },
+  xs: geo(126, 164),
+  sm: geo(162, 210),
+  lg: geo(198, 256),
 }
 
 const EDGE = 'oklch(0.88 0.03 238 / 0.5)'
@@ -204,7 +232,7 @@ export function Memories() {
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
           className="relative mt-24 cursor-grab touch-pan-y select-none outline-none active:cursor-grabbing sm:mt-32 lg:mt-36"
-          style={{ height: size.h * 1.62, perspective: 1600 }}
+          style={{ height: size.stage, perspective: PERSPECTIVE }}
         >
           {/* stage floor glow */}
           <div

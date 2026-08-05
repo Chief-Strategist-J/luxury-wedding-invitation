@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'motion/react'
 import { GoldDivider, Petals, Sparkles } from '@/components/decor'
 import { wedding, weddingDateLine } from '@/lib/wedding-config'
@@ -7,6 +8,12 @@ import { wedding, weddingDateLine } from '@/lib/wedding-config'
 export function Closing() {
   return (
     <footer className="relative isolate overflow-hidden px-5 py-24 text-center sm:py-32">
+      <Image
+        src="/media/gathbandhan.png"
+        alt=""
+        fill
+        className="absolute inset-0 -z-10 object-cover"
+      />
       <div className="absolute inset-0 bg-gradient-to-b from-background via-secondary/50 to-accent/40" />
       <Petals count={14} className="opacity-70" />
       <Sparkles count={18} className="opacity-70" />
