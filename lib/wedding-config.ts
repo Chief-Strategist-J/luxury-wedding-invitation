@@ -72,7 +72,7 @@ export const memories: MediaItem[] = [
   {
     id: 'first-date',
     type: 'image',
-    src: '/memories/first-date.png',
+    src: '/media/couple-portrait.png',
     title: 'First Date',
     caption:
       'Two coffees, one shared dessert and a conversation that refused to end.',
@@ -83,7 +83,7 @@ export const memories: MediaItem[] = [
   {
     id: 'road-trip',
     type: 'image',
-    src: '/memories/road-trip.png',
+    src: '/media/couple-portrait.png',
     title: 'The Road Trip',
     caption:
       'Wrong turns, one playlist on repeat, and a sunset we still talk about.',
@@ -94,7 +94,7 @@ export const memories: MediaItem[] = [
   {
     id: 'proposal',
     type: 'image',
-    src: '/memories/proposal.png',
+     src: '/media/couple-portrait.png',
     title: 'The Proposal',
     caption: 'Fairy lights, shaking hands and a yes before the question ended.',
     orientation: 'portrait',
@@ -104,7 +104,7 @@ export const memories: MediaItem[] = [
   {
     id: 'engagement',
     type: 'image',
-    src: '/memories/engagement.png',
+     src: '/media/couple-portrait.png',
     title: 'Engagement',
     caption: 'Rings exchanged, both families finally in one loud, happy room.',
     orientation: 'portrait',
@@ -114,7 +114,7 @@ export const memories: MediaItem[] = [
   {
     id: 'invite-photo',
     type: 'image',
-    src: '/media/invitation-ceremony.jpeg',
+     src: '/media/couple-portrait.png',
     title: 'Lagan Lekhan',
     caption: 'The first card, written with blessings.',
     orientation: 'portrait',
@@ -124,7 +124,7 @@ export const memories: MediaItem[] = [
   {
     id: 'couple',
     type: 'image',
-    src: '/media/couple-portrait.png',
+     src: '/media/couple-portrait.png',
     title: 'Arnav & Kiara',
     caption: 'Two hearts, one beautiful story.',
     orientation: 'portrait',
@@ -141,36 +141,39 @@ export const memories: MediaItem[] = [
     year: '2026',
     meta: 'Crystal Ballroom · 11 Dec',
   },
+ {
+  id: 'rainy-day',
+  type: 'image',
+  src: '/media/couple-portrait.png',
+  title: 'Rainy Day',
+  caption:
+    'One umbrella, endless laughter and the kind of rain we never wanted to end.',
+  orientation: 'portrait',
+  year: '2022',
+  meta: 'Marine Drive · July',
+},
   {
-    id: 'sangeet',
-    type: 'video',
-    src: '/media/sangeet-dance.mp4',
-    poster: '/media/ballroom-dance.jpeg',
-    title: 'Sangeet Night',
-    caption: 'Music, laughter and a floor full of family.',
-    orientation: 'portrait',
-    year: '2026',
-  },
-  {
-    id: 'haldi',
-    type: 'video',
-    src: '/media/haldi-celebration.mp4',
-    poster: '/media/invitation-ceremony.jpeg',
-    title: 'Haldi Ceremony',
-    caption: 'Turmeric, marigolds and golden light.',
-    orientation: 'portrait',
-    year: '2026',
-  },
-  {
-    id: 'invite-video',
-    type: 'video',
-    src: '/media/invitation-ceremony.mp4',
-    poster: '/media/invitation-ceremony.jpeg',
-    title: 'Invitation Ceremony',
-    caption: 'Placing the first invitation at His feet.',
-    orientation: 'portrait',
-    year: '2026',
-  },
+  id: 'stargazing',
+  type: 'image',
+   src: '/media/couple-portrait.png',
+  title: 'Under the Stars',
+  caption:
+    'A quiet night, countless stars, and dreams that suddenly felt possible together.',
+  orientation: 'portrait',
+  year: '2023',
+  meta: 'Rann of Kutch · Winter',
+},
+{
+  id: 'sunrise',
+  type: 'image',
+   src: '/media/couple-portrait.png',
+  title: 'Sunrise Adventure',
+  caption:
+    'We woke before the world did, just to watch the first rays paint the mountains together.',
+  orientation: 'portrait',
+  year: '2022',
+  meta: 'Mount Abu · 5:45 AM',
+}
 ]
 
 // ── Celebrations ─────────────────────────────────────────────

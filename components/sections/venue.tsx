@@ -70,7 +70,7 @@ export function Venue() {
               Wedding Day
             </span>
             <p className="font-serif text-2xl text-foreground">{weddingDateLine}</p>
-            <p className="text-sm text-muted-foreground">Baraat 6:00 PM &middot; Pheras 7:00 PM</p>
+            <p className="text-sm text-muted-foreground">Baraat 4:00 PM &middot; Pheras 9:00 PM</p>
           </div>
 
           <a
