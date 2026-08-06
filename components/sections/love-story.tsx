@@ -37,7 +37,7 @@ export function LoveStory() {
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
         <div
-          className="sticky z-20 bg-background/90 py-3 text-center backdrop-blur-md"
+          className="sticky z-20 bg-background py-3 text-center"
           style={{ top: '65px' }}
         >
           <Eyebrow>A little about us</Eyebrow>
@@ -51,7 +51,7 @@ export function LoveStory() {
           {/* Stacked Cards List */}
           <div className="flex flex-col gap-4">
             {storyChapters.map((chapter, i) => {
-              // Cards behind the active one shrink + dim slightly for depth
+              // Cards behind the active one shrink slightly for depth
               const isBehind = i < active
               return (
                 <div
@@ -64,8 +64,7 @@ export function LoveStory() {
                     top: `${190 + i * 15}px`,
                     zIndex: i + 1,
                     transform: isBehind ? `scale(${1 - (active - i) * 0.03})` : 'scale(1)',
-                    opacity: isBehind ? Math.max(0.7, 1 - (active - i) * 0.15) : 1,
-                    transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease',
+                    transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1)',
                   }}
                 >
                   <div className="grid h-full grid-cols-1 md:grid-cols-2">
