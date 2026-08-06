@@ -43,7 +43,7 @@ export function InvitationExperience() {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 1.1, ease: 'easeOut' }}
-          className="relative w-full overflow-x-hidden"
+          className="relative w-full"
         >
           <SiteNav />
           <CoupleReveal />
