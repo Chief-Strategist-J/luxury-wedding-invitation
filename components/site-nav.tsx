@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState } from 'react'
 import { useMusic } from '@/components/music-provider'
@@ -27,14 +28,22 @@ export function SiteNav() {
         aria-label="Main"
         className="flex w-full max-w-3xl items-center justify-between gap-3 rounded-full border border-accent/35 bg-card/75 px-4 py-2.5 shadow-[0_10px_30px_-18px_oklch(0.55_0.07_240/0.6)] backdrop-blur-md"
       >
+        {/* Logo */}
         <a
           href="#home"
-          className="font-serif text-base italic tracking-wide text-foreground/85"
+          className="flex items-center justify-center"
         >
-          A <span className="text-accent">&hearts;</span> K
+          <Image
+            src="/media/logo-ak.png"
+            alt="Arnav & Kiara"
+            width={75}
+            height={75}
+            priority
+            className="h-11 w-auto object-contain"
+          />
         </a>
 
-        {/* desktop links */}
+        {/* Desktop Links */}
         <ul className="hidden items-center gap-6 sm:flex">
           {links.map((l) => (
             <li key={l.href}>
@@ -49,7 +58,7 @@ export function SiteNav() {
         </ul>
 
         <div className="flex items-center gap-1.5">
-          {/* music on/off — also available here, not just the floating control */}
+          {/* Music Button */}
           <button
             type="button"
             onClick={toggle}
@@ -60,14 +69,16 @@ export function SiteNav() {
               className="size-1.5 rounded-full"
               style={{
                 background: playing ? 'var(--gold)' : 'oklch(0.8 0.02 240)',
-                boxShadow: playing ? '0 0 8px 2px oklch(0.86 0.09 85 / 0.7)' : 'none',
+                boxShadow: playing
+                  ? '0 0 8px 2px oklch(0.86 0.09 85 / 0.7)'
+                  : 'none',
               }}
               aria-hidden="true"
             />
             Music {playing ? 'On' : 'Off'}
           </button>
 
-          {/* mobile hamburger */}
+          {/* Mobile Menu */}
           <button
             type="button"
             onClick={() => setOpen((v) => !v)}
@@ -77,11 +88,19 @@ export function SiteNav() {
           >
             <span
               className="h-px w-4 bg-accent-foreground/70 transition-transform"
-              style={open ? { transform: 'translateY(3px) rotate(45deg)' } : undefined}
+              style={
+                open
+                  ? { transform: 'translateY(3px) rotate(45deg)' }
+                  : undefined
+              }
             />
             <span
               className="h-px w-4 bg-accent-foreground/70 transition-transform"
-              style={open ? { transform: 'translateY(-3px) rotate(-45deg)' } : undefined}
+              style={
+                open
+                  ? { transform: 'translateY(-3px) rotate(-45deg)' }
+                  : undefined
+              }
             />
           </button>
         </div>

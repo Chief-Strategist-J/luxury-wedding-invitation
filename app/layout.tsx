@@ -15,18 +15,28 @@ const _jost = Jost({
 })
 
 export const metadata: Metadata = {
-  title: 'Arnav ♥ Kiara — #AriaKiShaadi',
+  metadataBase: new URL('http://localhost:3000'),
+
+  title: 'Arnav ♥ Kiara — Wedding Invitation',
+
   description:
     'A luxury 3D wedding invitation for the wedding of Arnav Patel & Kiara Patel. Tap to open, scratch to reveal, and celebrate our forever.',
+
   generator: 'v0.app',
+
   openGraph: {
-    title: 'Arnav ♥ Kiara — #AriaKiShaadi',
-    description: 'A beautiful story awaits... Tap to open our wedding invitation.',
+    title: 'Arnav ♥ Kiara — AriaraKiShaadi',
+    description:
+      'A beautiful story awaits... Tap to open our wedding invitation.',
     type: 'website',
-  },
-  icons: {
-    icon: [{ url: '/icon.svg', type: 'image/svg+xml' }],
-    apple: '/apple-icon.png',
+    images: [
+      {
+        url: '/media/logo-ak.png',
+        width: 512,
+        height: 512,
+        alt: 'Arnav & Kiara Logo',
+      },
+    ],
   },
 }
 
