@@ -9,14 +9,20 @@ import {
 import Image from 'next/image'
 import { useRef, useState } from 'react'
 import { Eyebrow, GoldDivider, HeartMark, Petals, Sparkles } from '@/components/decor'
+import { cn } from '@/lib/utils'
 
 /* ────────────────────────────────────────────────────────────────
    Celebration schedule. Everything the section needs lives here, so
    this file is fully self-contained. Drop in your own `image` paths
    or add a `video` ({ src, poster }) to any event and the layout
    handles the rest.
+
+   Dress code = three named colours (with hex swatches) + one
+   English attire line, styled like a printed invitation card.
    ──────────────────────────────────────────────────────────────── */
 type CelebrationVideo = { src: string; poster?: string; title?: string }
+
+type DressColor = { name: string; hex: string }
 
 type Celebration = {
   name: string
@@ -25,8 +31,10 @@ type Celebration = {
   time: string
   venue: string
   description: string
-  dressCode: string
-  dressColors: { name: string; hex: string }[]
+  /** Attire line, English only — e.g. "Traditional Indian / Indo-Western". */
+  dressAttire: string
+  /** Exactly three colours: printed as "Maroon · Gold · Cream". */
+  dressColors: DressColor[]
   mapQuery: string
   image: string
   glyph: number
@@ -42,11 +50,11 @@ const celebrations: Celebration[] = [
     venue: 'Family Residence, Ahmedabad',
     description:
       'We begin with prayers to Lord Ganesha, the remover of obstacles, inviting his blessings upon every moment that follows.',
-    dressCode: 'Festive Traditional',
+    dressAttire: 'Traditional Indian',
     dressColors: [
-      { name: 'Red', hex: '#C0392B' },
-      { name: 'Gold', hex: '#E1B84B' },
-      { name: 'Orange', hex: '#E8781F' },
+      { name: 'Vermilion', hex: '#B33A2A' },
+      { name: 'Gold', hex: '#C9A24B' },
+      { name: 'Ivory', hex: '#F2E9DA' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/ganesh-sthapna.png',
@@ -60,11 +68,11 @@ const celebrations: Celebration[] = [
     venue: 'Family Residence, Ahmedabad',
     description:
       'The auspicious hour is fixed and the wedding rites are set in motion, marking the sacred beginning of the union.',
-    dressCode: 'Ivory & Gold',
+    dressAttire: 'Traditional Indian',
     dressColors: [
       { name: 'Ivory', hex: '#F4EFE3' },
-      { name: 'Gold', hex: '#E1B84B' },
-      { name: 'Champagne', hex: '#CBAE6A' },
+      { name: 'Gold', hex: '#C9A24B' },
+      { name: 'Champagne', hex: '#DFC79A' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/lagan-muhurat.png',
@@ -78,11 +86,11 @@ const celebrations: Celebration[] = [
     venue: 'Family Residence, Ahmedabad',
     description:
       'Turmeric, laughter and golden light — a morning of blessings smeared with love before the vows.',
-    dressCode: 'Shades of Yellow',
+    dressAttire: 'Indian Casual / Breezy Cottons',
     dressColors: [
-      { name: 'Yellow', hex: '#F6C445' },
-      { name: 'Marigold', hex: '#EBA200' },
-      { name: 'Butter', hex: '#FBE28A' },
+      { name: 'Marigold', hex: '#E8A81C' },
+      { name: 'Saffron', hex: '#F0C557' },
+      { name: 'Cream', hex: '#F6EEDC' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/haldi.png',
@@ -96,11 +104,11 @@ const celebrations: Celebration[] = [
     venue: 'Banquet Hall, Ahmedabad',
     description:
       'A night of music, dance and celebration as both families come together to sing our story into the stars.',
-    dressCode: 'Glam Indian · Jewel Tones',
+    dressAttire: 'Indo-Western / Evening Glamour',
     dressColors: [
-      { name: 'Emerald', hex: '#1E7A5E' },
-      { name: 'Purple', hex: '#7A2E8F' },
-      { name: 'Ruby', hex: '#B0143C' },
+      { name: 'Emerald', hex: '#1F6B54' },
+      { name: 'Sapphire', hex: '#2A4C8F' },
+      { name: 'Champagne', hex: '#DFC79A' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/sangeet.png',
@@ -114,11 +122,11 @@ const celebrations: Celebration[] = [
     venue: 'Departs to Satellite, Ahmedabad',
     description:
       'The groom’s joyful procession sets off with dhol and dance, making its way to Satellite, Ahmedabad.',
-    dressCode: 'Royal & Vibrant',
+    dressAttire: 'Traditional Indian / Indo-Western',
     dressColors: [
-      { name: 'Royal Blue', hex: '#1B4F8A' },
-      { name: 'Gold', hex: '#E1B84B' },
-      { name: 'Magenta', hex: '#C21E63' },
+      { name: 'Royal Blue', hex: '#27447E' },
+      { name: 'Gold', hex: '#C9A24B' },
+      { name: 'Coral', hex: '#E08A70' },
     ],
     mapQuery: 'Satellite, Ahmedabad, Gujarat',
     image: '/images/celebrations/baraat.png',
@@ -132,11 +140,11 @@ const celebrations: Celebration[] = [
     venue: 'Satellite, Ahmedabad',
     description:
       'Two hands, two hearts and seven sacred vows — the moment our lives are joined as one.',
-    dressCode: 'Regal Traditional',
+    dressAttire: 'Traditional Indian',
     dressColors: [
-      { name: 'Maroon', hex: '#7A1220' },
-      { name: 'Gold', hex: '#E1B84B' },
-      { name: 'Rose', hex: '#A8324A' },
+      { name: 'Maroon', hex: '#6E2230' },
+      { name: 'Gold', hex: '#C9A24B' },
+      { name: 'Cream', hex: '#F3E7D6' },
     ],
     mapQuery: 'Satellite, Ahmedabad, Gujarat',
     image: '/images/celebrations/hastamelap.png',
@@ -150,11 +158,11 @@ const celebrations: Celebration[] = [
     venue: 'Banquet, Ahmedabad',
     description:
       'An elegant evening to celebrate with everyone we love, as we step into this new chapter together.',
-    dressCode: 'Cocktail · Formal Elegance',
+    dressAttire: 'Formal / Cocktail Elegance',
     dressColors: [
-      { name: 'Navy', hex: '#1B2A4A' },
-      { name: 'Silver', hex: '#C6CCD6' },
-      { name: 'Blush', hex: '#E7C6C9' },
+      { name: 'Midnight', hex: '#1E2A44' },
+      { name: 'Silver', hex: '#C3C9D4' },
+      { name: 'Blush', hex: '#E8CBC9' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/reception.png',
@@ -166,6 +174,68 @@ const TOTAL = celebrations.length
 
 function mapsHref(query: string) {
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`
+}
+
+/* ── Dress code block, printed like an invitation card ─────────
+   DRESS CODE  →  overlapping colour swatches  →  "Maroon · Gold ·
+   Cream"  →  attire line in small caps.                        */
+function DressCode({
+  colors,
+  attire,
+  alignRight,
+}: {
+  colors: DressColor[]
+  attire: string
+  alignRight?: boolean
+}) {
+  return (
+    <div
+      className={cn(
+        'flex flex-col gap-2',
+        alignRight ? 'items-start md:items-end' : 'items-start',
+      )}
+    >
+      <span className="text-[0.6rem] font-medium uppercase tracking-[0.42em] text-accent-foreground/80">
+        Dress Code
+      </span>
+
+      {/* colour cluster: three separate swatches with two soft petals */}
+      <div
+        className={cn(
+          'relative inline-flex items-center gap-2.5',
+          alignRight && 'md:flex-row-reverse',
+        )}
+        aria-hidden="true"
+      >
+        <span
+          className="absolute -left-5 top-3.5 size-2.5 rounded-full"
+          style={{ backgroundColor: 'oklch(0.95 0.02 25 / 0.85)' }}
+        />
+        <span
+          className="absolute -right-5 top-4 size-2 rounded-full"
+          style={{ backgroundColor: 'oklch(0.96 0.02 85 / 0.9)' }}
+        />
+        {colors.map((color) => (
+          <span
+            key={color.name}
+            className="relative size-4 rounded-full ring-1 ring-inset ring-[oklch(1_0_0/0.45)]"
+            style={{
+              backgroundColor: color.hex,
+              boxShadow:
+                '0 0 0 1px oklch(0.8 0.05 85 / 0.55), 0 1px 4px oklch(0.4 0.05 60 / 0.22)',
+            }}
+          />
+        ))}
+      </div>
+
+      <p className="font-serif text-sm italic leading-none text-foreground/85">
+        {colors.map((c) => c.name).join(' · ')}
+      </p>
+      <p className="text-[0.58rem] uppercase leading-relaxed tracking-[0.22em] text-foreground/60">
+        {attire}
+      </p>
+    </div>
+  )
 }
 
 /** A tiny unique gold glyph per event. */
@@ -302,29 +372,17 @@ function EventRow({
         {c.description}
       </p>
 
-      {/* dress code with named colour swatches */}
-      <div className={`mt-4 ${imageFirst ? '' : 'md:flex md:flex-col md:items-end'}`}>
-        <span className="text-[0.6rem] uppercase tracking-[0.2em] text-accent-foreground/85">
-          Dress code &middot; {c.dressCode}
-        </span>
-        <div className={`mt-2 flex flex-wrap items-center gap-x-3 gap-y-1.5 ${imageFirst ? '' : 'md:justify-end'}`}>
-          {c.dressColors.map((color) => (
-            <span key={color.name} className="inline-flex items-center gap-1.5">
-              <span
-                aria-hidden="true"
-                className="size-3.5 rounded-full border border-white/70 ring-1 ring-accent/30"
-                style={{ backgroundColor: color.hex }}
-              />
-              <span className="text-[0.6rem] uppercase tracking-[0.16em] text-foreground/70">
-                {color.name}
-              </span>
-            </span>
-          ))}
-        </div>
+      {/* dress code, invitation-card style */}
+      <div className="mt-5">
+        <DressCode
+          colors={c.dressColors}
+          attire={c.dressAttire}
+          alignRight={!imageFirst}
+        />
       </div>
 
       {/* directions styled as a filled pill button */}
-      <div className={`mt-4 flex ${imageFirst ? '' : 'md:justify-end'}`}>
+      <div className={`mt-5 flex ${imageFirst ? '' : 'md:justify-end'}`}>
         <a
           href={mapsHref(c.mapQuery)}
           target="_blank"
@@ -468,12 +526,12 @@ export function Celebrations() {
           {/* centre line track + scroll-driven fill */}
           <span
             aria-hidden="true"
-            className="absolute bottom-0 left-[18px] top-0 w-[2px] rounded-full bg-accent/20 md:left-1/2 md:-translate-x-1/2"
+            className="absolute bottom-0 left-[18px] top-[22px] w-[2px] rounded-full bg-accent/20 md:left-1/2 md:-translate-x-1/2"
           />
           <motion.span
             aria-hidden="true"
             style={{ scaleY: fill }}
-            className="absolute bottom-0 left-[18px] top-0 w-[2px] origin-top rounded-full bg-gradient-to-b from-accent to-accent/60 md:left-1/2 md:-translate-x-1/2"
+            className="absolute bottom-0 left-[18px] top-[22px] w-[2px] origin-top rounded-full bg-gradient-to-b from-accent to-accent/60 md:left-1/2 md:-translate-x-1/2"
           />
 
           <ol ref={container} className="flex flex-col gap-16 sm:gap-24">
