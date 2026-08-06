@@ -37,8 +37,8 @@ export function LoveStory() {
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
         <div
-          className="sticky z-20 bg-background py-3 text-center"
-          style={{ top: '65px' }}
+          className="sticky z-20 bg-background pb-3 pt-6 text-center sm:pt-8"
+          style={{ top: '70px' }}
         >
           <Eyebrow>A little about us</Eyebrow>
           <h2 className="mt-1 font-serif text-3xl font-light italic text-foreground sm:text-5xl">
@@ -61,7 +61,7 @@ export function LoveStory() {
                   }}
                   className="story-card-item sticky overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)]"
                   style={{
-                    top: `${190 + i * 15}px`,
+                    top: `${215 + i * 15}px`,
                     zIndex: i + 1,
                     transform: isBehind ? `scale(${1 - (active - i) * 0.03})` : 'scale(1)',
                     transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1)',
