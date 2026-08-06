@@ -36,12 +36,12 @@ export function LoveStory() {
       <Sparkles count={12} />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
-        <div className="mb-12 text-center sm:mb-16">
+        <div className="sticky top-0 z-30 mb-8 bg-background/80 py-4 backdrop-blur-md text-center sm:mb-12">
           <Eyebrow>A little about us</Eyebrow>
-          <h2 className="mt-3 font-serif text-4xl font-light italic text-foreground sm:text-5xl">
+          <h2 className="mt-2 font-serif text-4xl font-light italic text-foreground sm:text-5xl">
             Our Story
           </h2>
-          <GoldDivider className="mt-5" />
+          <GoldDivider className="mt-4" />
         </div>
 
         <div className="grid lg:grid-cols-[1fr_280px] lg:gap-12">
@@ -55,7 +55,7 @@ export function LoveStory() {
                 }}
                 className="story-card-item sticky top-24 z-[10] overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] transition-all duration-300"
                 style={{
-                  top: `${90 + i * 28}px`,
+                  top: `${140 + i * 28}px`,
                   zIndex: i + 1,
                 }}
               >
