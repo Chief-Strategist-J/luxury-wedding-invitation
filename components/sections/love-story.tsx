@@ -55,7 +55,7 @@ export function LoveStory() {
                 }}
                 className="story-card-item sticky top-24 z-[10] overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] transition-all duration-300"
                 style={{
-                  top: `${90 + i * 16}px`,
+                  top: `${120 + i * 20}px`,
                   zIndex: i + 1,
                 }}
               >
