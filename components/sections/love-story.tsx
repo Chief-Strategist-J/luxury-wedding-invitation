@@ -46,22 +46,22 @@ export function LoveStory() {
 
         <div className="grid lg:grid-cols-[1fr_280px] lg:gap-12">
           {/* Stacked Cards List */}
-          <div className="flex flex-col gap-10 sm:gap-16">
+          <div className="flex flex-col" style={{ gap: '80vh' }}>
             {storyChapters.map((chapter, i) => (
               <div
                 key={chapter.label}
                 ref={(el) => {
                   itemRefs.current[i] = el
                 }}
-                className="story-card-item sticky top-24 z-[10] overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] transition-all duration-300"
+                className="story-card-item sticky overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)]"
                 style={{
-                  top: `${145 + i * 18}px`,
+                  top: `${80 + i * 20}px`,
                   zIndex: i + 1,
                 }}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2">
                   {/* Figure / Image */}
-                  <div className="relative h-48 w-full overflow-hidden bg-card/50 sm:h-56 md:h-full">
+                  <div className="relative h-52 w-full overflow-hidden bg-card/50 sm:h-64 md:h-full">
                     <Image
                       src={chapter.image || '/placeholder.svg'}
                       alt={chapter.label}
