@@ -61,7 +61,7 @@ export function LoveStory() {
                   }}
                   className="story-card-item sticky overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)]"
                   style={{
-                    top: `${215 + i * 15}px`,
+                    top: `${175 + i * 15}px`,
                     zIndex: i + 1,
                     transform: isBehind ? `scale(${1 - (active - i) * 0.03})` : 'scale(1)',
                     transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1)',
