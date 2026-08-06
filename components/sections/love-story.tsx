@@ -36,7 +36,7 @@ export function LoveStory() {
       <Sparkles count={12} />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
-        <div className="text-center" style={{ marginBottom: '60vh' }}>
+        <div className="mb-8 text-center">
           <Eyebrow>A little about us</Eyebrow>
           <h2 className="mt-2 font-serif text-4xl font-light italic text-foreground sm:text-5xl">
             Our Story
@@ -46,7 +46,7 @@ export function LoveStory() {
 
         <div className="grid lg:grid-cols-[1fr_280px] lg:gap-12">
           {/* Stacked Cards List */}
-          <div className="flex flex-col" style={{ gap: '80vh' }}>
+          <div className="flex flex-col gap-4">
             {storyChapters.map((chapter, i) => (
               <div
                 key={chapter.label}
@@ -57,6 +57,7 @@ export function LoveStory() {
                 style={{
                   top: `${80 + i * 20}px`,
                   zIndex: i + 1,
+                  minHeight: '70vh',
                 }}
               >
                 <div className="grid grid-cols-1 md:grid-cols-2">
