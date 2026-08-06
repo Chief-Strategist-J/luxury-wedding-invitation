@@ -19,7 +19,7 @@ export const wedding = {
   brideFather: 'Vikrambhai Pravinbhai Patel',
   brideMother: 'Meeraben Vikrambhai Patel',
 
-  hashtag: '#AriaKiShaadi',
+  hashtag: '#AriaraKiShaadi',
 
   /** The ONE date that powers the date reveal + countdown. */
   date: '2026-12-12T19:00:00+05:30',
