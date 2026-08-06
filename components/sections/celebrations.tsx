@@ -57,7 +57,7 @@ const celebrations: Celebration[] = [
       { name: 'Ivory', hex: '#F2E9DA' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/images/celebrations/ganesh-sthapna.png',
+    image: '/media/gold_festive_ganesh_india.png',
     glyph: 0,
   },
   {
@@ -75,7 +75,7 @@ const celebrations: Celebration[] = [
       { name: 'Champagne', hex: '#DFC79A' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/images/celebrations/lagan-muhurat.png',
+    image: '/media/mandap.png',
     glyph: 1,
   },
   {
@@ -93,8 +93,9 @@ const celebrations: Celebration[] = [
       { name: 'Cream', hex: '#F6EEDC' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/images/celebrations/haldi.png',
+    image: '/media/getting-married.png',
     glyph: 2,
+    video: { src: '/media/haldi-celebration.mp4' },
   },
   {
     name: 'Sangeet',
@@ -111,8 +112,9 @@ const celebrations: Celebration[] = [
       { name: 'Champagne', hex: '#DFC79A' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/images/celebrations/sangeet.png',
+    image: '/media/first-dance.png',
     glyph: 4,
+    video: { src: '/media/sangeet-dance.mp4' },
   },
   {
     name: 'Baraat',
@@ -129,8 +131,9 @@ const celebrations: Celebration[] = [
       { name: 'Coral', hex: '#E08A70' },
     ],
     mapQuery: 'Satellite, Ahmedabad, Gujarat',
-    image: '/images/celebrations/baraat.png',
+    image: '/media/engagement.png',
     glyph: 6,
+    video: { src: '/media/Bride_and_groom_enter_palace_202607290130.mp4' },
   },
   {
     name: 'Hastamelap',
@@ -147,7 +150,7 @@ const celebrations: Celebration[] = [
       { name: 'Cream', hex: '#F3E7D6' },
     ],
     mapQuery: 'Satellite, Ahmedabad, Gujarat',
-    image: '/images/celebrations/hastamelap.png',
+    image: '/media/gathbandhan.png',
     glyph: 5,
   },
   {
@@ -165,7 +168,7 @@ const celebrations: Celebration[] = [
       { name: 'Blush', hex: '#E8CBC9' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/images/celebrations/reception.png',
+    image: '/media/venue.png',
     glyph: 3,
   },
 ]
