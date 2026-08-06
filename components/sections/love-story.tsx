@@ -55,13 +55,13 @@ export function LoveStory() {
                 }}
                 className="story-card-item sticky top-24 z-[10] overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] transition-all duration-300"
                 style={{
-                  top: `${100 + i * 25}px`,
+                  top: `${90 + i * 16}px`,
                   zIndex: i + 1,
                 }}
               >
-                <div className="grid min-h-[380px] grid-cols-1 md:grid-cols-2">
+                <div className="grid grid-cols-1 md:grid-cols-2">
                   {/* Figure / Image */}
-                  <div className="relative h-64 w-full overflow-hidden bg-card/50 md:h-full">
+                  <div className="relative h-48 w-full overflow-hidden bg-card/50 sm:h-56 md:h-full">
                     <Image
                       src={chapter.image || '/placeholder.svg'}
                       alt={chapter.label}
@@ -74,18 +74,18 @@ export function LoveStory() {
                   </div>
 
                   {/* Info / Description */}
-                  <div className="flex flex-col justify-center p-6 sm:p-10">
-                    <span className="mb-2 font-serif text-xs italic tracking-widest text-accent-foreground uppercase">
+                  <div className="flex flex-col justify-center p-5 sm:p-8">
+                    <span className="mb-1 font-serif text-[0.7rem] italic tracking-widest text-accent-foreground uppercase">
                       Chapter {String(i + 1).padStart(2, '0')}
                     </span>
-                    <h3 className="font-serif text-2xl font-semibold text-foreground sm:text-3xl">
+                    <h3 className="font-serif text-xl font-semibold text-foreground sm:text-2xl">
                       {chapter.label}
                     </h3>
-                    <p className="mt-4 font-sans text-sm leading-relaxed text-muted-foreground sm:text-base">
+                    <p className="mt-2 font-sans text-xs leading-relaxed text-muted-foreground sm:text-sm">
                       {chapter.description ||
                         'A magical moment in our journey together leading up to our forever.'}
                     </p>
-                    <div className="mt-6 flex items-center gap-2 text-xs font-medium tracking-wider text-accent uppercase">
+                    <div className="mt-4 flex items-center gap-2 text-[0.7rem] font-medium tracking-wider text-accent uppercase">
                       <span>Memory #{i + 1}</span>
                       <span className="h-px w-8 bg-accent/40" />
                     </div>
