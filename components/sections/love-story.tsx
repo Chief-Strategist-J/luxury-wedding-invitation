@@ -36,7 +36,7 @@ export function LoveStory() {
       <Sparkles count={12} />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
-        <div className="sticky top-14 z-30 mb-8 bg-background/85 py-3 backdrop-blur-md text-center sm:mb-12">
+        <div className="mb-8 text-center sm:mb-12">
           <Eyebrow>A little about us</Eyebrow>
           <h2 className="mt-2 font-serif text-4xl font-light italic text-foreground sm:text-5xl">
             Our Story
@@ -55,7 +55,7 @@ export function LoveStory() {
                 }}
                 className="story-card-item sticky top-24 z-[10] overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] transition-all duration-300"
                 style={{
-                  top: `${190 + i * 28}px`,
+                  top: `${100 + i * 25}px`,
                   zIndex: i + 1,
                 }}
               >
@@ -97,7 +97,7 @@ export function LoveStory() {
 
           {/* Right Sticky Heart Timeline */}
           <div className="hidden lg:block">
-            <div className="sticky top-48 pt-4">
+            <div className="sticky top-28 pt-4">
               <div className="relative flex flex-col justify-center gap-8 rounded-2xl border border-accent/20 bg-card/60 p-6 backdrop-blur-sm">
                 <span
                   aria-hidden="true"
