@@ -36,7 +36,7 @@ export function LoveStory() {
       <Sparkles count={12} />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
-        <div className="mb-8 text-center sm:mb-12">
+        <div className="mb-8 pt-16 text-center sm:mb-12 sm:pt-20">
           <Eyebrow>A little about us</Eyebrow>
           <h2 className="mt-2 font-serif text-4xl font-light italic text-foreground sm:text-5xl">
             Our Story
