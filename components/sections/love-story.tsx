@@ -50,53 +50,63 @@ export function LoveStory() {
         <div className="grid lg:grid-cols-[1fr_280px] lg:gap-12">
           {/* Stacked Cards List */}
           <div className="flex flex-col gap-4">
-            {storyChapters.map((chapter, i) => (
-              <div
-                key={chapter.label}
-                ref={(el) => {
-                  itemRefs.current[i] = el
-                }}
-                className="story-card-item sticky overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)]"
-                style={{
-                  top: `${230 + i * 20}px`,
-                  zIndex: i + 1,
-                  minHeight: '70vh',
-                }}
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2">
-                  {/* Figure / Image */}
-                  <div className="relative h-52 w-full overflow-hidden bg-card/50 sm:h-64 md:h-full">
-                    <Image
-                      src={chapter.image || '/placeholder.svg'}
-                      alt={chapter.label}
-                      fill
-                      sizes="(max-width: 768px) 100vw, 50vw"
-                      className="object-cover transition-transform duration-700 hover:scale-105"
-                      priority={i === 0}
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-card/20" />
-                  </div>
+            {storyChapters.map((chapter, i) => {
+              // Cards behind the active one shrink + dim slightly for depth
+              const isBehind = i < active
+              return (
+                <div
+                  key={chapter.label}
+                  ref={(el) => {
+                    itemRefs.current[i] = el
+                  }}
+                  className="story-card-item sticky overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)]"
+                  style={{
+                    top: `${230 + i * 20}px`,
+                    zIndex: i + 1,
+                    minHeight: '70vh',
+                    transform: isBehind ? `scale(${1 - (active - i) * 0.04})` : 'scale(1)',
+                    opacity: isBehind ? Math.max(0.6, 1 - (active - i) * 0.15) : 1,
+                    transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease',
+                  }}
+                >
+                  <div className="grid h-full grid-cols-1 md:grid-cols-2">
+                    {/* Figure / Image */}
+                    <div className="relative h-52 w-full overflow-hidden bg-card/50 sm:h-64 md:h-full">
+                      <Image
+                        src={chapter.image || '/placeholder.svg'}
+                        alt={chapter.label}
+                        fill
+                        sizes="(max-width: 768px) 100vw, 50vw"
+                        className="object-cover transition-transform duration-700 hover:scale-105"
+                        priority={i === 0}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-card/20" />
+                    </div>
 
-                  {/* Info / Description */}
-                  <div className="flex flex-col justify-center p-5 sm:p-8">
-                    <span className="mb-1 font-serif text-[0.7rem] italic tracking-widest text-accent-foreground uppercase">
-                      Chapter {String(i + 1).padStart(2, '0')}
-                    </span>
-                    <h3 className="font-serif text-xl font-semibold text-foreground sm:text-2xl">
-                      {chapter.label}
-                    </h3>
-                    <p className="mt-2 font-sans text-xs leading-relaxed text-muted-foreground sm:text-sm">
-                      {chapter.description ||
-                        'A magical moment in our journey together leading up to our forever.'}
-                    </p>
-                    <div className="mt-4 flex items-center gap-2 text-[0.7rem] font-medium tracking-wider text-accent uppercase">
-                      <span>Memory #{i + 1}</span>
-                      <span className="h-px w-8 bg-accent/40" />
+                    {/* Info / Description */}
+                    <div className="flex flex-col justify-center p-5 sm:p-8">
+                      <span className="mb-1 font-serif text-[0.7rem] italic tracking-widest text-accent-foreground uppercase">
+                        Chapter {String(i + 1).padStart(2, '0')}
+                      </span>
+                      <h3 className="font-serif text-xl font-semibold text-foreground sm:text-2xl">
+                        {chapter.label}
+                      </h3>
+                      <p className="mt-2 font-sans text-xs leading-relaxed text-muted-foreground sm:text-sm">
+                        {chapter.description ||
+                          'A magical moment in our journey together leading up to our forever.'}
+                      </p>
+                      <div className="mt-4 flex items-center gap-2 text-[0.7rem] font-medium tracking-wider text-accent uppercase">
+                        <span>Memory #{i + 1}</span>
+                        <span className="h-px w-8 bg-accent/40" />
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
+              )
+            })}
+
+            {/* Spacer — lets the last card scroll away when leaving section */}
+            <div style={{ minHeight: '50vh' }} aria-hidden="true" />
           </div>
 
           {/* Right Sticky Heart Timeline */}
