@@ -72,7 +72,7 @@ export const memories: MediaItem[] = [
   {
     id: 'first-date',
     type: 'image',
-    src: '/media/couple-portrait.png',
+    src: '/media/first-date.png',
     title: 'First Date',
     caption:
       'Two coffees, one shared dessert and a conversation that refused to end.',
@@ -83,7 +83,7 @@ export const memories: MediaItem[] = [
   {
     id: 'road-trip',
     type: 'image',
-    src: '/media/couple-portrait.png',
+    src: '/media/road-trip.png',
     title: 'The Road Trip',
     caption:
       'Wrong turns, one playlist on repeat, and a sunset we still talk about.',
@@ -94,7 +94,7 @@ export const memories: MediaItem[] = [
   {
     id: 'proposal',
     type: 'image',
-     src: '/media/couple-portrait.png',
+    src: '/media/proposal.png',
     title: 'The Proposal',
     caption: 'Fairy lights, shaking hands and a yes before the question ended.',
     orientation: 'portrait',
@@ -104,7 +104,7 @@ export const memories: MediaItem[] = [
   {
     id: 'engagement',
     type: 'image',
-     src: '/media/couple-portrait.png',
+    src: '/media/engagement.png',
     title: 'Engagement',
     caption: 'Rings exchanged, both families finally in one loud, happy room.',
     orientation: 'portrait',
@@ -112,68 +112,69 @@ export const memories: MediaItem[] = [
     meta: 'The Grand Hall · 21 Jan',
   },
   {
-    id: 'invite-photo',
+    id: 'lake-boat-ride',
     type: 'image',
-     src: '/media/couple-portrait.png',
-    title: 'Lagan Lekhan',
-    caption: 'The first card, written with blessings.',
+    src: '/media/lake-boat-ride.png',
+    title: 'Lake Boat Ride',
+    caption:
+      'The water was calm, but our hearts were full of excitement.',
     orientation: 'portrait',
-    year: '2026',
-    meta: 'Patel Residence · 07 Dec',
+    year: '2025',
+    meta: 'Udaipur Lake · Evening',
   },
   {
-    id: 'couple',
+    id: 'surprise-birthday',
     type: 'image',
-     src: '/media/couple-portrait.png',
-    title: 'Arnav & Kiara',
-    caption: 'Two hearts, one beautiful story.',
+    src: '/media/surprise-birthday.png',
+    title: 'Surprise Birthday',
+    caption:
+      'The smile on your face was worth every secret we kept.',
     orientation: 'portrait',
-    year: '2026',
-    meta: 'Grand Mandap · 12 Dec',
-  },
-  {
-    id: 'ballroom',
+    year: '2024',
+    meta: 'Private Rooftop · 18 August',
+  }, {
+    id: 'first-dance',
     type: 'image',
-    src: '/media/ballroom-dance.jpeg',
+    src: '/media/first-dance.png',
     title: 'The First Dance',
     caption: 'Under a thousand candles, the world went quiet.',
     orientation: 'portrait',
     year: '2026',
     meta: 'Crystal Ballroom · 11 Dec',
   },
- {
-  id: 'rainy-day',
-  type: 'image',
-  src: '/media/couple-portrait.png',
-  title: 'Rainy Day',
-  caption:
-    'One umbrella, endless laughter and the kind of rain we never wanted to end.',
-  orientation: 'portrait',
-  year: '2022',
-  meta: 'Marine Drive · July',
-},
   {
-  id: 'stargazing',
-  type: 'image',
-   src: '/media/couple-portrait.png',
-  title: 'Under the Stars',
-  caption:
-    'A quiet night, countless stars, and dreams that suddenly felt possible together.',
-  orientation: 'portrait',
-  year: '2023',
-  meta: 'Rann of Kutch · Winter',
-},
-{
-  id: 'sunrise',
-  type: 'image',
-   src: '/media/couple-portrait.png',
-  title: 'Sunrise Adventure',
-  caption:
-    'We woke before the world did, just to watch the first rays paint the mountains together.',
-  orientation: 'portrait',
-  year: '2022',
-  meta: 'Mount Abu · 5:45 AM',
-}
+    id: 'rainy-day',
+    type: 'image',
+    src: '/media/rainy-day.png',
+    title: 'Rainy Day',
+    caption:
+      'One umbrella, endless laughter and the kind of rain we never wanted to end.',
+    orientation: 'portrait',
+    year: '2022',
+    meta: 'Marine Drive · July',
+  },
+  {
+    id: 'lantern-night',
+    type: 'image',
+    src: '/media/lantern.png',
+    title: 'Lantern Wishes',
+    caption:
+      'With every lantern we released, our dreams found their way to the stars.',
+    orientation: 'portrait',
+    year: '2023',
+    meta: 'Lakeside Festival · Evening',
+  },
+  {
+    id: 'sunrise',
+    type: 'image',
+    src: '/media/sunrise.png',
+    title: 'Sunrise Adventure',
+    caption:
+      'We woke before the world did, just to watch the first rays paint the mountains together.',
+    orientation: 'portrait',
+    year: '2022',
+    meta: 'Mount Abu · 5:45 AM',
+  }
 ]
 
 // ── Celebrations ─────────────────────────────────────────────
