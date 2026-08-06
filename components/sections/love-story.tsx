@@ -32,11 +32,11 @@ export function LoveStory() {
   }, [])
 
   return (
-    <section id="story" className="relative w-full px-4 pb-16 sm:px-8 sm:pb-24" style={{ scrollMarginTop: '80px' }}>
+    <section id="story" className="relative w-full px-4 pb-16 pt-28 sm:px-8 sm:pb-24 sm:pt-36" style={{ scrollMarginTop: '80px' }}>
       <Sparkles count={12} />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
-        <div className="mb-8 text-center sm:mb-12" style={{ paddingTop: 'calc(80px + 2rem)' }}>
+        <div className="text-center" style={{ marginBottom: '60vh' }}>
           <Eyebrow>A little about us</Eyebrow>
           <h2 className="mt-2 font-serif text-4xl font-light italic text-foreground sm:text-5xl">
             Our Story
