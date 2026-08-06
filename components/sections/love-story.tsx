@@ -69,7 +69,7 @@ export function LoveStory() {
                 >
                   <div className="grid h-full grid-cols-1 md:grid-cols-2">
                     {/* Figure / Image */}
-                    <div className="relative h-52 w-full overflow-hidden bg-card/50 sm:h-64 md:h-full">
+                    <div className="relative h-72 w-full overflow-hidden bg-card/50 sm:h-88 md:h-full">
                       <Image
                         src={chapter.image || '/placeholder.svg'}
                         alt={chapter.label}
