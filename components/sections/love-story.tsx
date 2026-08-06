@@ -32,19 +32,19 @@ export function LoveStory() {
   }, [])
 
   return (
-    <section id="story" className="relative w-full px-4 pb-16 pt-28 sm:px-8 sm:pb-24 sm:pt-36" style={{ scrollMarginTop: '80px' }}>
+    <section id="story" className="relative w-full px-2 pb-16 pt-24 sm:px-8 sm:pb-24 sm:pt-32" style={{ scrollMarginTop: '80px' }}>
       <Sparkles count={12} />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
         <div
-          className="sticky z-20 bg-background/90 py-4 text-center backdrop-blur-md"
-          style={{ top: '70px' }}
+          className="sticky z-20 bg-background/90 py-3 text-center backdrop-blur-md"
+          style={{ top: '65px' }}
         >
           <Eyebrow>A little about us</Eyebrow>
-          <h2 className="mt-2 font-serif text-4xl font-light italic text-foreground sm:text-5xl">
+          <h2 className="mt-1 font-serif text-3xl font-light italic text-foreground sm:text-5xl">
             Our Story
           </h2>
-          <GoldDivider className="mt-4" />
+          <GoldDivider className="mt-2" />
         </div>
 
         <div className="grid lg:grid-cols-[1fr_280px] lg:gap-12">
@@ -61,11 +61,10 @@ export function LoveStory() {
                   }}
                   className="story-card-item sticky overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)]"
                   style={{
-                    top: `${230 + i * 20}px`,
+                    top: `${190 + i * 15}px`,
                     zIndex: i + 1,
-                    minHeight: '70vh',
-                    transform: isBehind ? `scale(${1 - (active - i) * 0.04})` : 'scale(1)',
-                    opacity: isBehind ? Math.max(0.6, 1 - (active - i) * 0.15) : 1,
+                    transform: isBehind ? `scale(${1 - (active - i) * 0.03})` : 'scale(1)',
+                    opacity: isBehind ? Math.max(0.7, 1 - (active - i) * 0.15) : 1,
                     transition: 'transform 0.5s cubic-bezier(0.4,0,0.2,1), opacity 0.5s ease',
                   }}
                 >
