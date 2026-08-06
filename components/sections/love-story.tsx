@@ -1,14 +1,7 @@
 'use client'
 
-import {
-  motion,
-  useMotionValueEvent,
-  useScroll,
-  useTransform,
-  type MotionValue,
-} from 'motion/react'
 import Image from 'next/image'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   Eyebrow,
   GoldDivider,
@@ -17,163 +10,33 @@ import {
 } from '@/components/decor'
 import { storyChapters } from '@/lib/wedding-config'
 
-const TOTAL = storyChapters.length
-
-function clamp(v: number, min: number, max: number) {
-  return Math.min(Math.max(v, min), max)
-}
-
-function StackedCard({
-  index,
-  image,
-  label,
-  progress,
-  active,
-}: {
-  index: number
-  image: string
-  label: string
-  progress: MotionValue<number>
-  active: number
-}) {
-  const isLast = index === TOTAL - 1
-  const start = index / TOTAL
-  const end = Math.min(start + 1 / TOTAL, 1)
-
-  const scale = useTransform(
-    progress,
-    [start, end],
-    [1, isLast ? 1 : 0.94],
-  )
-  const rotate = useTransform(
-    progress,
-    [start, end],
-    [0, isLast ? 0 : index % 2 === 0 ? -2 : 2],
-  )
-  const opacity = useTransform(
-    progress,
-    [start, end],
-    [1, isLast ? 1 : 0.7],
-  )
-
-  const isActive = index === active
-
-  return (
-    <div
-      className="sticky top-20 flex h-[75vh] items-center justify-center sm:top-24 sm:h-[80vh]"
-      style={{
-        zIndex: index + 10,
-      }}
-    >
-      <motion.div
-        style={{
-          scale,
-          rotate,
-          opacity,
-          willChange: 'transform, opacity',
-        }}
-        className="relative w-full max-w-[300px] origin-top sm:max-w-[340px] lg:max-w-[370px]"
-      >
-        <div className="relative rounded-[26px] border border-accent/40 bg-card p-3 shadow-[0_25px_60px_-15px_rgba(0,0,0,0.3)]">
-          <div className="relative aspect-[4/5] max-h-[52dvh] w-full overflow-hidden rounded-[18px] bg-card">
-            <Image
-              src={image || '/placeholder.svg'}
-              alt={label}
-              fill
-              sizes="(max-width: 640px) 86vw, 400px"
-              className="object-contain"
-              priority={index === 0}
-            />
-          </div>
-          <span
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-[10px] rounded-[20px] border border-accent/25"
-          />
-        </div>
-
-        <span
-          className={`absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-accent/50 bg-card px-4 py-1 font-serif text-xs italic text-accent-foreground shadow-sm transition-opacity duration-500 ${
-            isActive ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          Chapter {index + 1}
-        </span>
-        <span
-          className={`absolute -bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-accent/40 bg-card px-4 py-1 font-serif text-[0.72rem] text-muted-foreground shadow-sm transition-opacity duration-500 lg:hidden ${
-            isActive ? 'opacity-100' : 'opacity-0'
-          }`}
-        >
-          {label}
-        </span>
-      </motion.div>
-    </div>
-  )
-}
-
-function HeartTimeline({ active }: { active: number }) {
-  return (
-    <div className="sticky top-32 hidden lg:block">
-      <div className="flex items-center pt-8">
-        <div className="relative flex flex-col justify-center gap-10">
-          <span
-            aria-hidden="true"
-            className="absolute bottom-6 left-[18px] top-6 w-[2px] rounded-full bg-accent/20"
-          />
-          {storyChapters.map((c, i) => {
-            const reached = i <= active
-            return (
-              <div key={c.label} className="relative flex items-center gap-5">
-                <HeartMark filled={reached} active={i === active} />
-                <div>
-                  <p
-                    className={`font-serif text-xs tracking-[0.28em] transition-colors duration-500 ${
-                      reached
-                        ? 'text-accent-foreground'
-                        : 'text-muted-foreground/50'
-                    }`}
-                  >
-                    {String(i + 1).padStart(2, '0')}
-                  </p>
-                  <p
-                    className={`mt-1 max-w-[15rem] text-pretty font-serif text-lg leading-snug transition-all duration-500 xl:text-xl ${
-                      i === active
-                        ? 'italic text-foreground'
-                        : reached
-                          ? 'text-foreground/70'
-                          : 'text-muted-foreground/55'
-                    }`}
-                  >
-                    {c.label}
-                  </p>
-                </div>
-              </div>
-            )
-          })}
-        </div>
-      </div>
-    </div>
-  )
-}
-
 export function LoveStory() {
-  const container = useRef<HTMLDivElement | null>(null)
-
-  const { scrollYProgress } = useScroll({
-    target: container,
-    offset: ['start start', 'end end'],
-  })
-
   const [active, setActive] = useState(0)
-  useMotionValueEvent(scrollYProgress, 'change', (p) => {
-    setActive(clamp(Math.floor(p * TOTAL), 0, TOTAL - 1))
-  })
+  const itemRefs = useRef<(HTMLDivElement | null)[]>([])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      itemRefs.current.forEach((el, index) => {
+        if (!el) return
+        const rect = el.getBoundingClientRect()
+        // If card top has hit or passed the sticky offset line
+        if (rect.top <= 120 && rect.bottom > 120) {
+          setActive(index)
+        }
+      })
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll()
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
-    <section id="story" className="relative w-full px-5 py-12 sm:px-8 sm:py-16">
-      <Sparkles count={10} />
+    <section id="story" className="relative w-full px-4 py-16 sm:px-8 sm:py-24">
+      <Sparkles count={12} />
 
       <div className="relative z-10 mx-auto w-full max-w-6xl">
-        <div className="py-8 text-center">
+        <div className="mb-12 text-center sm:mb-16">
           <Eyebrow>A little about us</Eyebrow>
           <h2 className="mt-3 font-serif text-4xl font-light italic text-foreground sm:text-5xl">
             Our Story
@@ -181,26 +44,101 @@ export function LoveStory() {
           <GoldDivider className="mt-5" />
         </div>
 
-        <div ref={container} className="relative mx-auto min-h-[300vh] max-w-6xl">
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-10">
-            <div className="relative">
-              <Sparkles count={10} className="opacity-60" />
-              {storyChapters.map((c, i) => (
-                <StackedCard
-                  key={c.label}
-                  index={i}
-                  image={c.image}
-                  label={c.label}
-                  progress={scrollYProgress}
-                  active={active}
-                />
-              ))}
-            </div>
+        <div className="grid lg:grid-cols-[1fr_280px] lg:gap-12">
+          {/* Stacked Cards List */}
+          <div className="flex flex-col gap-10 sm:gap-16">
+            {storyChapters.map((chapter, i) => (
+              <div
+                key={chapter.label}
+                ref={(el) => {
+                  itemRefs.current[i] = el
+                }}
+                className="story-card-item sticky top-24 z-[10] overflow-hidden rounded-3xl border border-accent/40 bg-card shadow-[0_20px_50px_-15px_rgba(0,0,0,0.15)] transition-all duration-300"
+                style={{
+                  top: `${80 + i * 15}px`,
+                }}
+              >
+                <div className="grid min-h-[380px] grid-cols-1 md:grid-cols-2">
+                  {/* Figure / Image */}
+                  <div className="relative h-64 w-full overflow-hidden bg-card/50 md:h-full">
+                    <Image
+                      src={chapter.image || '/placeholder.svg'}
+                      alt={chapter.label}
+                      fill
+                      sizes="(max-width: 768px) 100vw, 50vw"
+                      className="object-cover transition-transform duration-700 hover:scale-105"
+                      priority={i === 0}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent md:bg-gradient-to-r md:from-transparent md:to-card/20" />
+                  </div>
 
-            <HeartTimeline active={active} />
+                  {/* Info / Description */}
+                  <div className="flex flex-col justify-center p-6 sm:p-10">
+                    <span className="mb-2 font-serif text-xs italic tracking-widest text-accent-foreground uppercase">
+                      Chapter {String(i + 1).padStart(2, '0')}
+                    </span>
+                    <h3 className="font-serif text-2xl font-semibold text-foreground sm:text-3xl">
+                      {chapter.label}
+                    </h3>
+                    <p className="mt-4 font-sans text-sm leading-relaxed text-muted-foreground sm:text-base">
+                      {chapter.description ||
+                        'A magical moment in our journey together leading up to our forever.'}
+                    </p>
+                    <div className="mt-6 flex items-center gap-2 text-xs font-medium tracking-wider text-accent uppercase">
+                      <span>Memory #{i + 1}</span>
+                      <span className="h-px w-8 bg-accent/40" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Right Sticky Heart Timeline */}
+          <div className="hidden lg:block">
+            <div className="sticky top-28 pt-4">
+              <div className="relative flex flex-col justify-center gap-8 rounded-2xl border border-accent/20 bg-card/60 p-6 backdrop-blur-sm">
+                <span
+                  aria-hidden="true"
+                  className="absolute bottom-10 left-[41px] top-10 w-[2px] rounded-full bg-accent/20"
+                />
+
+                {storyChapters.map((c, i) => {
+                  const reached = i <= active
+                  return (
+                    <div key={c.label} className="relative flex items-center gap-4">
+                      <HeartMark filled={reached} active={i === active} />
+                      <div>
+                        <p
+                          className={`font-serif text-xs tracking-[0.2em] transition-colors duration-300 ${
+                            reached
+                              ? 'text-accent-foreground'
+                              : 'text-muted-foreground/50'
+                          }`}
+                        >
+                          CHAPTER {String(i + 1).padStart(2, '0')}
+                        </p>
+                        <p
+                          className={`mt-0.5 line-clamp-1 font-serif text-sm transition-all duration-300 ${
+                            i === active
+                              ? 'font-medium italic text-foreground'
+                              : reached
+                                ? 'text-foreground/70'
+                                : 'text-muted-foreground/55'
+                          }`}
+                        >
+                          {c.label}
+                        </p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
   )
 }
+

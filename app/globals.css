@@ -198,6 +198,24 @@
   }
 }
 
+@keyframes in-n-out {
+  0%, 75% {
+    scale: 100%;
+  }
+  100% {
+    scale: 85%;
+  }
+}
+
+.story-card-item:not(:last-child) {
+  view-timeline-name: --card;
+  view-timeline-axis: block;
+  animation-timeline: --card;
+  animation-name: in-n-out;
+  animation-range: entry 90% cover 50%;
+  animation-fill-mode: both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -207,3 +225,4 @@
     transition-duration: 0.001ms !important;
   }
 }
+
