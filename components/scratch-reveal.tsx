@@ -1,8 +1,9 @@
 'use client'
 
+import { Pointer } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { GoldDivider, CelebrationBurst  } from '@/components/decor'
+import { GoldDivider, CelebrationBurst } from '@/components/decor'
 import { wedding, weddingDateParts } from '@/lib/wedding-config'
 
 /* ── heart geometry, reused as the scratch mask ── */
@@ -69,16 +70,17 @@ function splitRemaining(ms: number) {
 
 /* ── live countdown, shown under the revealed date ── */
 function DateCountdown() {
-  const [left, setLeft] = useState(() => splitRemaining(weddingTarget() - Date.now()))
+  /* start from a stable value so the server and the first client render agree,
+     then tick from a real diff once mounted */
+  const target = useMemo(weddingTarget, [])
+  const [left, setLeft] = useState(() => splitRemaining(0))
 
   useEffect(() => {
-    const target = weddingTarget()
-    const id = window.setInterval(
-      () => setLeft(splitRemaining(target - Date.now())),
-      1000,
-    )
+    const update = () => setLeft(splitRemaining(target - Date.now()))
+    update()
+    const id = window.setInterval(update, 1000)
     return () => window.clearInterval(id)
-  }, [])
+  }, [target])
 
   const cells = [
     { v: left.days, l: 'Days' },
@@ -167,6 +169,9 @@ export function ScratchReveal({
 }) {
   const [open, setOpen] = useState<[boolean, boolean, boolean]>([false, false, false])
   const allOpen = open.every(Boolean)
+  /* the finger cue shows exactly once: on the Day heart only, and it disappears
+     for good the moment any heart has been scratched. */
+  const showDayFinger = !open.some(Boolean)
   const doneRef = useRef(false)
   const [burstKey, setBurstKey] = useState(0)
 
@@ -221,6 +226,7 @@ export function ScratchReveal({
           </div>
         )}
       </AnimatePresence>
+
       <div className="relative z-10 flex w-full max-w-md flex-col items-center text-center">
         {/* ── || श्री गणेशाय नमः || — golden invocation ── */}
         <motion.p
@@ -235,7 +241,7 @@ export function ScratchReveal({
 
         {/* ── invitation line, normal (non-gold) text color ── */}
         <motion.p
-          className="mt-3 text-[0.62rem] text-muted-foreground tracking-[0.28em] sm:text-xs"
+          className="mt-3 text-[0.62rem] tracking-[0.28em] sm:text-xs"
           style={{ color: 'oklch(0.4 0.03 60)' }}
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
@@ -267,12 +273,13 @@ export function ScratchReveal({
 
         {/* ── the three date hearts, arranged in a V: Day / Month on top, Year below-center ── */}
         <div className="mt-9 flex flex-col items-center">
-          <div className="flex items-end justify-center gap-5 sm:gap-8">
+          <div className="flex items-end justify-center gap-3 sm:gap-8">
             <HeartScratch
               value={parts[0].value}
               label={parts[0].label}
               delay={0.5}
               opened={open[0]}
+              showFinger={showDayFinger}
               onOpen={() => markOpen(0)}
             />
             <HeartScratch
@@ -280,15 +287,17 @@ export function ScratchReveal({
               label={parts[1].label}
               delay={0.66}
               opened={open[1]}
+              showFinger={false}
               onOpen={() => markOpen(1)}
             />
           </div>
-          <div className="-mt-3 sm:-mt-4">
+          <div className="-mt-5 sm:-mt-6">
             <HeartScratch
               value={parts[2].value}
               label={parts[2].label}
               delay={0.82}
               opened={open[2]}
+              showFinger={false}
               onOpen={() => markOpen(2)}
             />
           </div>
@@ -309,15 +318,17 @@ export function ScratchReveal({
               <DateCountdown />
             </motion.div>
           ) : (
-            <motion.p
+            <motion.div
               key="hint"
-              className="mt-7 max-w-[15rem] text-[0.6rem] uppercase leading-relaxed tracking-[0.18em] text-muted-foreground sm:max-w-none sm:text-[0.65rem] sm:tracking-[0.24em]"
+              className="mt-7 flex items-center justify-center"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
             >
-              Scratch each heart with your finger
-            </motion.p>
+              <p className="max-w-[15rem] text-xs uppercase leading-relaxed tracking-[0.2em] text-muted-foreground sm:max-w-none sm:text-sm sm:tracking-[0.24em]">
+                Scratch each heart with your finger
+              </p>
+            </motion.div>
           )}
         </AnimatePresence>
       </div>
@@ -331,12 +342,14 @@ function HeartScratch({
   label,
   delay,
   opened,
+  showFinger,
   onOpen,
 }: {
   value: string
   label: string
   delay: number
   opened: boolean
+  showFinger: boolean
   onOpen: () => void
 }) {
   const wrapRef = useRef<HTMLDivElement | null>(null)
@@ -346,10 +359,16 @@ function HeartScratch({
   const tick = useRef(0)
   const [progress, setProgress] = useState(0)
 
+  /* one shared 2d context, flagged for frequent reads so the progress
+     sampling in measure() stays cheap on mobile */
+  const ctxOf = useCallback((canvas: HTMLCanvasElement) => {
+    return canvas.getContext('2d', { willReadFrequently: true })
+  }, [])
+
   /* golden foil, clipped to the heart by the CSS mask — matches the lock theme */
   const paint = useCallback(
     (canvas: HTMLCanvasElement) => {
-      const ctx = canvas.getContext('2d')
+      const ctx = ctxOf(canvas)
       if (!ctx) return
       const { width: w, height: h } = canvas
       ctx.globalCompositeOperation = 'source-over'
@@ -361,50 +380,59 @@ function HeartScratch({
       ctx.fillStyle = g
       ctx.fillRect(0, 0, w, h)
 
-      /* soft sparkles of light instead of the old diagonal lines */
+      /* sparkling foil: scattered star glints across the gold */
       const rand = (n: number) => {
         const s = Math.sin(n * 12.9898) * 43758.5453
         return s - Math.floor(s)
       }
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 34; i++) {
         const x = rand(i + 1) * w
         const y = rand(i + 7.3) * h
-        const r = 1.4 + rand(i + 3.1) * 3.4
-        const halo = ctx.createRadialGradient(x, y, 0, x, y, r * 3.4)
-        halo.addColorStop(0, `rgba(255,255,255,${0.5 + rand(i + 5.7) * 0.4})`)
-        halo.addColorStop(0.45, 'rgba(255,248,232,0.24)')
+        const r = 1.6 + rand(i + 3.1) * 3.8
+
+        const halo = ctx.createRadialGradient(x, y, 0, x, y, r * 3.6)
+        halo.addColorStop(0, `rgba(255,255,255,${0.55 + rand(i + 5.7) * 0.4})`)
+        halo.addColorStop(0.4, 'rgba(255,250,236,0.26)')
         halo.addColorStop(1, 'rgba(255,255,255,0)')
         ctx.fillStyle = halo
         ctx.beginPath()
-        ctx.arc(x, y, r * 3.4, 0, Math.PI * 2)
+        ctx.arc(x, y, r * 3.6, 0, Math.PI * 2)
         ctx.fill()
 
-        /* tiny four-point glint */
-        ctx.strokeStyle = `rgba(255,255,255,${0.35 + rand(i + 9.4) * 0.4})`
+        /* four-point star glint */
+        ctx.strokeStyle = `rgba(255,255,255,${0.45 + rand(i + 9.4) * 0.45})`
         ctx.lineWidth = 0.9
         ctx.beginPath()
-        ctx.moveTo(x - r, y)
-        ctx.lineTo(x + r, y)
-        ctx.moveTo(x, y - r)
-        ctx.lineTo(x, y + r)
+        ctx.moveTo(x - r * 1.6, y)
+        ctx.lineTo(x + r * 1.6, y)
+        ctx.moveTo(x, y - r * 1.6)
+        ctx.lineTo(x, y + r * 1.6)
         ctx.stroke()
       }
 
-      const sheen = ctx.createLinearGradient(0, h, w, 0)
-      sheen.addColorStop(0, 'rgba(255,255,255,0)')
-      sheen.addColorStop(0.5, 'rgba(255,255,255,0.5)')
-      sheen.addColorStop(0.7, 'rgba(255,255,255,0)')
-      ctx.fillStyle = sheen
+      /* two broad crossing highlights give the foil a polished-metal bloom */
+      const bloom = ctx.createLinearGradient(0, h, w, 0)
+      bloom.addColorStop(0, 'rgba(255,255,255,0)')
+      bloom.addColorStop(0.4, 'rgba(255,255,255,0.42)')
+      bloom.addColorStop(0.56, 'rgba(255,255,255,0.62)')
+      bloom.addColorStop(0.74, 'rgba(255,255,255,0)')
+      ctx.fillStyle = bloom
+      ctx.fillRect(0, 0, w, h)
+
+      const edge = ctx.createRadialGradient(w / 2, h * 0.42, w * 0.1, w / 2, h * 0.45, w * 0.62)
+      edge.addColorStop(0, 'rgba(255,255,255,0.18)')
+      edge.addColorStop(1, 'rgba(160,116,48,0.28)')
+      ctx.fillStyle = edge
       ctx.fillRect(0, 0, w, h)
 
       const c = ctx as CanvasRenderingContext2D & { letterSpacing?: string }
       c.textAlign = 'center'
       c.letterSpacing = '3px'
-      c.font = `500 ${Math.max(8, Math.round(w * 0.085))}px Jost, sans-serif`
-      c.fillStyle = 'rgba(120,88,42,0.72)'
+      c.font = `500 ${Math.max(9, Math.round(w * 0.095))}px Jost, sans-serif`
+      c.fillStyle = 'rgba(112,80,36,0.75)'
       c.fillText(label.toUpperCase(), w / 2, h * 0.52)
     },
-    [label],
+    [ctxOf, label],
   )
 
   useEffect(() => {
@@ -413,8 +441,12 @@ function HeartScratch({
     if (!canvas || !wrap) return
     const setup = () => {
       const r = wrap.getBoundingClientRect()
-      canvas.width = Math.max(1, Math.round(r.width))
-      canvas.height = Math.max(1, Math.round(r.height))
+      const w = Math.max(1, Math.round(r.width))
+      const h = Math.max(1, Math.round(r.height))
+      /* re-painting resets the foil, so skip it when the size did not really change */
+      if (canvas.width === w && canvas.height === h) return
+      canvas.width = w
+      canvas.height = h
       paint(canvas)
       setProgress(0)
     }
@@ -426,8 +458,9 @@ function HeartScratch({
 
   const measure = useCallback(() => {
     const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
+    if (!canvas) return
+    const ctx = ctxOf(canvas)
+    if (!ctx) return
     const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height)
     let clear = 0
     let total = 0
@@ -436,35 +469,41 @@ function HeartScratch({
       if (data[i] < 40) clear++
     }
     if (total) setProgress(clear / total)
-  }, [])
+  }, [ctxOf])
 
   useEffect(() => {
     /* just a couple of strokes anywhere on the heart is enough — the rest opens on its own */
     if (!opened && progress >= 0.12) onOpen()
   }, [progress, opened, onOpen])
 
-  const scratch = useCallback((x: number, y: number) => {
-    const canvas = canvasRef.current
-    const ctx = canvas?.getContext('2d')
-    if (!canvas || !ctx) return
-    ctx.globalCompositeOperation = 'destination-out'
-    ctx.lineWidth = 34
-    ctx.lineCap = 'round'
-    ctx.lineJoin = 'round'
-    const l = last.current
-    if (l) {
+  const scratch = useCallback(
+    (x: number, y: number) => {
+      const canvas = canvasRef.current
+      if (!canvas) return
+      const ctx = ctxOf(canvas)
+      if (!ctx) return
+      /* brush scales with the heart so small screens still clear at the same rate */
+      const brush = Math.max(16, canvas.width * 0.17)
+      ctx.globalCompositeOperation = 'destination-out'
+      ctx.lineWidth = brush * 2
+      ctx.lineCap = 'round'
+      ctx.lineJoin = 'round'
+      const l = last.current
+      if (l) {
+        ctx.beginPath()
+        ctx.moveTo(l.x, l.y)
+        ctx.lineTo(x, y)
+        ctx.stroke()
+      }
       ctx.beginPath()
-      ctx.moveTo(l.x, l.y)
-      ctx.lineTo(x, y)
-      ctx.stroke()
-    }
-    ctx.beginPath()
-    ctx.arc(x, y, 17, 0, Math.PI * 2)
-    ctx.fill()
-    last.current = { x, y }
-  }, [])
+      ctx.arc(x, y, brush, 0, Math.PI * 2)
+      ctx.fill()
+      last.current = { x, y }
+    },
+    [ctxOf],
+  )
 
-  function pointFrom(e: React.PointerEvent) {
+  const pointFrom = useCallback((e: React.PointerEvent<HTMLCanvasElement>) => {
     const canvas = canvasRef.current
     if (!canvas) return { x: 0, y: 0 }
     const r = canvas.getBoundingClientRect()
@@ -472,7 +511,13 @@ function HeartScratch({
       x: ((e.clientX - r.left) / r.width) * canvas.width,
       y: ((e.clientY - r.top) / r.height) * canvas.height,
     }
-  }
+  }, [])
+
+  const endStroke = useCallback(() => {
+    if (drawing.current) measure()
+    drawing.current = false
+    last.current = null
+  }, [measure])
 
   return (
     <motion.div
@@ -500,143 +545,190 @@ function HeartScratch({
           delay: delay + 0.2,
         }}
       >
-      {/* glow behind the heart */}
-      <motion.span
-        aria-hidden="true"
-        className="pointer-events-none absolute -inset-4 rounded-full blur-xl"
-        animate={{ opacity: opened ? 0.85 : 0.35 }}
-        style={{
-          background:
-            'radial-gradient(closest-side, oklch(0.93 0.06 88 / 0.6), transparent)',
-        }}
-      />
-
-      <div
-        ref={wrapRef}
-        className="relative size-24 touch-none select-none sm:size-28"
-        style={{
-          maskImage: HEART_MASK,
-          WebkitMaskImage: HEART_MASK,
-          maskSize: '100% 100%',
-          WebkitMaskSize: '100% 100%',
-          maskRepeat: 'no-repeat',
-          WebkitMaskRepeat: 'no-repeat',
-        }}
-      >
-        {/* the value hidden underneath */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center pb-3"
+        {/* glow behind the heart */}
+        <motion.span
+          aria-hidden="true"
+          className="pointer-events-none absolute -inset-4 rounded-full blur-xl"
+          animate={{ opacity: opened ? 0.85 : 0.35 }}
           style={{
             background:
-              'linear-gradient(155deg, oklch(0.97 0.05 90), oklch(0.86 0.09 82) 55%, oklch(0.74 0.1 74))',
+              'radial-gradient(closest-side, oklch(0.93 0.06 88 / 0.6), transparent)',
+          }}
+        />
+
+        <div
+          ref={wrapRef}
+          className="relative size-32 touch-none select-none sm:size-40"
+          style={{
+            maskImage: HEART_MASK,
+            WebkitMaskImage: HEART_MASK,
+            maskSize: '100% 100%',
+            WebkitMaskSize: '100% 100%',
+            maskRepeat: 'no-repeat',
+            WebkitMaskRepeat: 'no-repeat',
           }}
         >
-          <span
-            className={
-              label === 'Month'
-                ? 'font-serif text-sm font-medium tracking-[0.04em] sm:text-lg'
-                : 'font-serif text-lg font-light sm:text-xl'
-            }
-            style={{ color: 'oklch(0.42 0.06 68)' }}
+          {/* the value hidden underneath */}
+          <div
+            className="absolute inset-0 flex flex-col items-center justify-center pb-3"
+            style={{
+              background:
+                'linear-gradient(155deg, oklch(0.97 0.05 90), oklch(0.86 0.09 82) 55%, oklch(0.74 0.1 74))',
+            }}
           >
-            {value}
-          </span>
-          <span
-            className="mt-0.5 text-[0.45rem] uppercase tracking-[0.24em]"
-            style={{ color: 'oklch(0.55 0.07 70)' }}
-          >
-            {label}
-          </span>
-        </div>
+            <span
+              className={
+                label === 'Month'
+                  ? 'font-serif text-xl font-medium tracking-[0.04em] sm:text-2xl'
+                  : 'font-serif text-2xl font-light sm:text-3xl'
+              }
+              style={{ color: 'oklch(0.42 0.06 68)' }}
+            >
+              {value}
+            </span>
+            <span
+              className="mt-1 text-[0.6rem] uppercase tracking-[0.24em]"
+              style={{ color: 'oklch(0.55 0.07 70)' }}
+            >
+              {label}
+            </span>
+          </div>
 
-        {/* the foil */}
-        <motion.canvas
-          ref={canvasRef}
-          className="absolute inset-0 size-full touch-none cursor-grab"
-          animate={{ opacity: opened ? 0 : 1 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-          style={{ pointerEvents: opened ? 'none' : 'auto' }}
-          onPointerDown={(e) => {
-            e.currentTarget.setPointerCapture(e.pointerId)
-            drawing.current = true
-            last.current = null
-            const p = pointFrom(e)
-            scratch(p.x, p.y)
-            measure()
-          }}
-          onPointerMove={(e) => {
-            if (!drawing.current) return
-            const p = pointFrom(e)
-            scratch(p.x, p.y)
-            tick.current += 1
-            if (tick.current % 3 === 0) measure()
-          }}
-          onPointerUp={() => {
-            drawing.current = false
-            last.current = null
-            measure()
-          }}
-          onPointerLeave={() => {
-            if (drawing.current) measure()
-            drawing.current = false
-            last.current = null
-          }}
-        />
-      </div>
+          {/* the foil */}
+          <motion.canvas
+            ref={canvasRef}
+            className="absolute inset-0 size-full touch-none cursor-grab"
+            animate={{ opacity: opened ? 0 : 1 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+            style={{ pointerEvents: opened ? 'none' : 'auto' }}
+            onPointerDown={(e) => {
+              e.currentTarget.setPointerCapture(e.pointerId)
+              drawing.current = true
+              last.current = null
+              const p = pointFrom(e)
+              scratch(p.x, p.y)
+              measure()
+            }}
+            onPointerMove={(e) => {
+              if (!drawing.current) return
+              const p = pointFrom(e)
+              scratch(p.x, p.y)
+              tick.current += 1
+              if (tick.current % 3 === 0) measure()
+            }}
+            onPointerUp={(e) => {
+              if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+                e.currentTarget.releasePointerCapture(e.pointerId)
+              }
+              endStroke()
+            }}
+            onPointerCancel={endStroke}
+            onPointerLeave={endStroke}
+          />
 
-      {/* heart outline on top */}
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 100 100"
-        className="pointer-events-none absolute inset-0 size-full"
-      >
-        <path
-          d={HEART_PATH}
-          fill="none"
-          stroke="oklch(0.7 0.09 74 / 0.85)"
-          strokeWidth="1.6"
-        />
-      </svg>
-
-      {/* sparkle decor when the heart opens */}
-      <AnimatePresence>
-        {opened && (
-          <motion.div
-            className="pointer-events-none absolute inset-0"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-          >
+          {/* travelling shine band — a live glint sweeping across the foil, so the
+              heart reads as an untouched metallic scratch panel */}
+          {!opened && (
             <motion.span
-              className="absolute inset-0"
-              initial={{ opacity: 0.9, scale: 0.5 }}
-              animate={{ opacity: 0, scale: 1.9 }}
-              transition={{ duration: 1.4, ease: 'easeOut' }}
+              aria-hidden="true"
+              className="pointer-events-none absolute -inset-y-2 -left-1/2 w-1/2"
               style={{
                 background:
-                  'radial-gradient(circle at 50% 50%, oklch(0.93 0.07 88 / 0.9), transparent 65%)',
+                  'linear-gradient(105deg, transparent, rgba(255,255,255,0.15) 35%, rgba(255,255,255,0.85) 50%, rgba(255,255,255,0.15) 65%, transparent)',
+              }}
+              animate={{ x: ['0%', '400%'] }}
+              transition={{
+                duration: 2.2,
+                repeat: Number.POSITIVE_INFINITY,
+                repeatDelay: 1.1,
+                ease: 'easeInOut',
+                delay,
               }}
             />
-            {Array.from({ length: 10 }).map((_, i) => (
+          )}
+        </div>
+
+        {/* rubbing finger cue — sits outside the heart mask so it is never clipped.
+            Only the Day heart ever passes showFinger, so this is a one-time hint. */}
+        <AnimatePresence>
+          {showFinger && !opened && (
+            <motion.span
+              aria-hidden="true"
+              className="pointer-events-none absolute left-1/2 top-1/2 z-10"
+              style={{
+                marginLeft: '-0.75rem',
+                marginTop: '-0.75rem',
+                color: 'oklch(0.52 0.11 68)',
+                filter: 'drop-shadow(0 2px 4px oklch(1 0 0 / 0.85))',
+              }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                x: [-16, 16, -16],
+                rotate: [-14, 10, -14],
+              }}
+              exit={{ opacity: 0 }}
+              transition={{
+                opacity: { duration: 0.4 },
+                scale: { duration: 0.4 },
+                x: { duration: 2.1, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' },
+                rotate: { duration: 2.1, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' },
+              }}
+            >
+              <Pointer className="size-7 sm:size-8" strokeWidth={1.5} />
+            </motion.span>
+          )}
+        </AnimatePresence>
+
+        {/* heart outline on top */}
+        <svg
+          aria-hidden="true"
+          viewBox="0 0 100 100"
+          className="pointer-events-none absolute inset-0 size-full"
+        >
+          <path d={HEART_PATH} fill="none" stroke="oklch(0.7 0.09 74 / 0.85)" strokeWidth="1.6" />
+        </svg>
+
+        {/* sparkle decor when the heart opens */}
+        <AnimatePresence>
+          {opened && (
+            <motion.div
+              className="pointer-events-none absolute inset-0"
+              initial={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+            >
               <motion.span
-                key={i}
-                className="absolute left-1/2 top-1/2 text-[0.6rem]"
-                style={{ color: i % 2 ? 'oklch(0.8 0.1 80)' : 'var(--gold)' }}
-                initial={{ x: 0, y: 0, opacity: 1, scale: 0.5 }}
-                animate={{
-                  x: Math.cos((i / 10) * Math.PI * 2) * (44 + (i % 3) * 12),
-                  y: Math.sin((i / 10) * Math.PI * 2) * (44 + (i % 3) * 12) - 16,
-                  opacity: 0,
-                  scale: 1.15,
-                  rotate: i % 2 ? 40 : -40,
+                className="absolute inset-0"
+                initial={{ opacity: 0.9, scale: 0.5 }}
+                animate={{ opacity: 0, scale: 1.9 }}
+                transition={{ duration: 1.4, ease: 'easeOut' }}
+                style={{
+                  background:
+                    'radial-gradient(circle at 50% 50%, oklch(0.93 0.07 88 / 0.9), transparent 65%)',
                 }}
-                transition={{ duration: 1.6, delay: 0.05 * i, ease: 'easeOut' }}
-              >
-                {i % 2 ? '\u2665' : '\u2726'}
-              </motion.span>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
+              />
+              {Array.from({ length: 10 }).map((_, i) => (
+                <motion.span
+                  key={i}
+                  className="absolute left-1/2 top-1/2 text-[0.6rem]"
+                  style={{ color: i % 2 ? 'oklch(0.8 0.1 80)' : 'var(--gold)' }}
+                  initial={{ x: 0, y: 0, opacity: 1, scale: 0.5 }}
+                  animate={{
+                    x: Math.cos((i / 10) * Math.PI * 2) * (44 + (i % 3) * 12),
+                    y: Math.sin((i / 10) * Math.PI * 2) * (44 + (i % 3) * 12) - 16,
+                    opacity: 0,
+                    scale: 1.15,
+                    rotate: i % 2 ? 40 : -40,
+                  }}
+                  transition={{ duration: 1.6, delay: 0.05 * i, ease: 'easeOut' }}
+                >
+                  {i % 2 ? '\u2665' : '\u2726'}
+                </motion.span>
+              ))}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </motion.div>
       <span className="sr-only">{`${label}: ${value}`}</span>
     </motion.div>
