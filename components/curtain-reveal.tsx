@@ -123,7 +123,7 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
           - justify-between (with the scroll cue as a separate flex child) so that
             once the cue appears, it gets pushed down and actually fills the empty
             space at the bottom instead of leaving it blank */}
-      <div className="relative z-30 flex h-full flex-col items-center justify-between gap-2 px-6 pb-8 pt-16 text-center sm:pt-20">
+      <div className="relative z-30 flex h-full flex-col items-center justify-center gap-2 px-6 pb-10 pt-14 text-center sm:pt-16">
         <div className="flex flex-col items-center gap-2">
           {/* श्री गणेशाय नमः — fades in first, before anything else appears */}
           <Reveal
@@ -131,7 +131,7 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
             duration={0.8}
             startDelay={200}
             onDone={() => setPhase('image')}
-            className="font-serif text-lg font-medium tracking-wide text-foreground sm:text-xl"
+            className="font-serif text-xl font-medium tracking-wide text-foreground sm:text-2xl"
             key="namah-reveal"
           />
 
@@ -177,14 +177,14 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
           </AnimatePresence>
 
           {/* shlok — two lines, smaller and more delicate so it reads cleanly on the template */}
-          <div className="mt-2 flex max-w-xs flex-col items-center gap-0.5">
+          <div className="mt-2 flex max-w-sm flex-col items-center gap-0.5">
             {showLine1 && (
               <Reveal
                 text={SHLOK_LINE_1}
                 duration={0.7}
                 startDelay={80}
                 onDone={() => setPhase((p) => (p === 'line1' ? 'line2' : p))}
-                className="font-serif text-xs font-light italic leading-snug text-foreground/80 sm:text-sm"
+                className="font-serif text-sm font-light italic leading-relaxed text-foreground/80 sm:text-base"
                 key="shlok-line-1"
               />
             )}
@@ -194,7 +194,7 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
                 duration={0.7}
                 startDelay={120}
                 onDone={() => setPhase((p) => (p === 'line2' ? 'groom' : p))}
-                className="font-serif text-xs font-light italic leading-snug text-foreground/80 sm:text-sm"
+                className="font-serif text-sm font-light italic leading-relaxed text-foreground/80 sm:text-base"
                 key="shlok-line-2"
               />
             )}
@@ -211,14 +211,14 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
               onAnimationComplete={() => setPhase((p) => (p === 'groom' ? 'bride' : p))}
               key="groom-block"
             >
-              <span className="font-serif text-2xl font-semibold text-gold-gradient sm:text-3xl">
+              <span className="font-serif text-3xl font-semibold text-gold-gradient sm:text-4xl">
                 {wedding.groom}
               </span>
-              <span className="mt-0.5 font-serif text-sm italic text-foreground/60 sm:text-base">son of</span>
-              <span className="font-serif text-sm italic text-foreground/75 sm:text-base">
+              <span className="mt-0.5 font-serif text-base italic text-foreground/60 sm:text-lg">son of</span>
+              <span className="font-serif text-base italic leading-relaxed text-foreground/75 sm:text-lg">
                 Mr. {wedding.groomFather}
               </span>
-              <span className="font-serif text-sm italic text-foreground/75 sm:text-base">
+              <span className="font-serif text-base italic leading-relaxed text-foreground/75 sm:text-lg">
                 Mrs. {wedding.groomMother}
               </span>
             </motion.div>
@@ -227,12 +227,12 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
           {/* gathbandhan image, then bride's name — highlighted in gold, then "daughter of" + parents */}
           {showBride && (
             <>
-              <div className="relative mt-2 h-10 w-48 sm:h-12 sm:w-56">
+              <div className="relative mt-3 h-16 w-64 sm:h-20 sm:w-80">
                 <Image
                   src="/media/gathbandhan.png"
                   alt="Gathbandhan"
                   fill
-                  sizes="224px"
+                  sizes="320px"
                   className="object-contain"
                 />
               </div>
@@ -244,14 +244,14 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
                 onAnimationComplete={() => setPhase((p) => (p === 'bride' ? 'tagline' : p))}
                 key="bride-block"
               >
-                <span className="font-serif text-2xl font-semibold text-gold-gradient sm:text-3xl">
+                <span className="font-serif text-3xl font-semibold text-gold-gradient sm:text-4xl">
                   {wedding.bride}
                 </span>
-                <span className="mt-0.5 font-serif text-sm italic text-foreground/60 sm:text-base">daughter of</span>
-                <span className="font-serif text-sm italic text-foreground/75 sm:text-base">
+                <span className="mt-0.5 font-serif text-base italic text-foreground/60 sm:text-lg">daughter of</span>
+                <span className="font-serif text-base italic leading-relaxed text-foreground/75 sm:text-lg">
                   Mr. {wedding.brideFather}
                 </span>
-                <span className="font-serif text-sm italic text-foreground/75 sm:text-base">
+                <span className="font-serif text-base italic leading-relaxed text-foreground/75 sm:text-lg">
                   Mrs. {wedding.brideMother}
                 </span>
               </motion.div>
@@ -266,40 +266,38 @@ export function CurtainReveal({ onDone }: { onDone: () => void }) {
               duration={0.8}
               startDelay={150}
               onDone={() => setScrollArmed(true)}
-              className="mt-3 font-serif text-sm font-light italic text-foreground/80 sm:text-base"
+              className="mt-4 font-serif text-base font-light italic text-foreground/80 sm:text-lg"
               key="tagline-reveal"
             />
           )}
-        </div>
 
-        {/* animated scroll-down cue — its own flex child now, so once it shows up,
-            justify-between on the parent pushes it down and fills the leftover
-            space at the bottom instead of leaving it empty */}
-        {scrollArmed && (
-          <motion.div
-            className="flex flex-col items-center gap-0.5"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.8, delay: 0.2 }}
-          >
-            <motion.svg
-              width="22"
-              height="22"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="1.6"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              className="text-[oklch(0.6_0.09_74)]"
-              animate={{ y: [0, 8, 0] }}
-              transition={{ duration: 1.6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+          {/* compact scroll cue — a small gold pill that sits right under the tagline
+              instead of an arrow pinned to the bottom edge, so there is no big empty
+              gap on tall mobile screens */}
+          {scrollArmed && (
+            <motion.div
+              className="mt-5 flex items-center gap-2 rounded-full border px-4 py-1.5 backdrop-blur-sm"
+              style={{
+                borderColor: 'oklch(0.78 0.07 80 / 0.5)',
+                background: 'oklch(1 0 0 / 0.35)',
+              }}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.2 }}
             >
-              <path d="M12 5v14" />
-              <path d="M5 12l7 7 7-7" />
-            </motion.svg>
-          </motion.div>
-        )}
+              <span className="font-serif text-xs uppercase tracking-[0.2em] text-[oklch(0.55_0.09_74)] sm:text-sm">
+                Swipe up
+              </span>
+              <motion.span
+                aria-hidden="true"
+                className="block size-1.5 rounded-full"
+                style={{ background: 'oklch(0.62 0.1 74)' }}
+                animate={{ opacity: [0.3, 1, 0.3], scale: [0.85, 1.15, 0.85] }}
+                transition={{ duration: 1.6, repeat: Number.POSITIVE_INFINITY, ease: 'easeInOut' }}
+              />
+            </motion.div>
+          )}
+        </div>
       </div>
     </motion.div>
   )
