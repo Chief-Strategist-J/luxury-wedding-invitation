@@ -12,6 +12,7 @@ __v0_jsx-dev-runtime.ts
 # Common ignores
 node_modules
 .next/
-.DS_Storeout/
+.DS_Store
+out/
 .firebase/
 firebase-debug.log
