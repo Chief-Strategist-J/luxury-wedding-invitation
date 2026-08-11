@@ -7,7 +7,7 @@ import {
   useTransform,
 } from 'motion/react'
 import Image from 'next/image'
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Eyebrow, GoldDivider, HeartMark, Petals, Sparkles } from '@/components/decor'
 import { cn } from '@/lib/utils'
 
@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils'
    Celebration schedule. Everything the section needs lives here, so
    this file is fully self-contained. Drop in your own `image` paths
    or add a `video` ({ src, poster }) to any event and the layout
-   handles the rest.
+   handles the rest. Only Sangeet and Reception carry video.
 
    Dress code = three named colours (with hex swatches) + one
    English attire line, styled like a printed invitation card.
@@ -37,7 +37,6 @@ type Celebration = {
   dressColors: DressColor[]
   mapQuery: string
   image: string
-  glyph: number
   video?: CelebrationVideo
 }
 
@@ -57,8 +56,7 @@ const celebrations: Celebration[] = [
       { name: 'Ivory', hex: '#F2E9DA' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/images/celebrations/ganesh-sthapna.png',
-    glyph: 0,
+    image: '/media/ganesh-sthapna.png',
   },
   {
     name: 'Lagan Vadhavanu Muhurat',
@@ -75,8 +73,7 @@ const celebrations: Celebration[] = [
       { name: 'Champagne', hex: '#DFC79A' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/images/celebrations/lagan-muhurat.png',
-    glyph: 1,
+    image: '/media/lagan-muhrat.jpeg',
   },
   {
     name: 'Haldi',
@@ -93,8 +90,7 @@ const celebrations: Celebration[] = [
       { name: 'Cream', hex: '#F6EEDC' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/images/celebrations/haldi.png',
-    glyph: 2,
+    image: '/media/haldi-ceremory.png',
   },
   {
     name: 'Sangeet',
@@ -112,7 +108,11 @@ const celebrations: Celebration[] = [
     ],
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/sangeet.png',
-    glyph: 4,
+    video: {
+      src: '/media/sangit-ceremory.mp4',
+      poster: '/images/celebrations/sangeet.png',
+      title: 'Sangeet',
+    },
   },
   {
     name: 'Baraat',
@@ -129,8 +129,7 @@ const celebrations: Celebration[] = [
       { name: 'Coral', hex: '#E08A70' },
     ],
     mapQuery: 'Satellite, Ahmedabad, Gujarat',
-    image: '/images/celebrations/baraat.png',
-    glyph: 6,
+    image: '/media/baraat.jpeg',
   },
   {
     name: 'Hastamelap',
@@ -148,7 +147,6 @@ const celebrations: Celebration[] = [
     ],
     mapQuery: 'Satellite, Ahmedabad, Gujarat',
     image: '/images/celebrations/hastamelap.png',
-    glyph: 5,
   },
   {
     name: 'Reception',
@@ -166,7 +164,6 @@ const celebrations: Celebration[] = [
     ],
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/reception.png',
-    glyph: 3,
   },
 ]
 
@@ -238,30 +235,22 @@ function DressCode({
   )
 }
 
-/** A tiny unique gold glyph per event. */
-function EventGlyph({ index }: { index: number }) {
-  const glyphs = [
-    <path key="d" d="M4 15h16c-1.6 3-4.6 5-8 5s-6.4-2-8-5zM12 4c2.6 2.6 2.6 5.4 0 8-2.6-2.6-2.6-5.4 0-8z" />,
-    <path key="s" d="M6 4h12v16H6zM9 8h6M9 12h6M9 16h4" />,
-    <path key="h" d="M8 20v-6M12 20V8M16 20v-5M6 14c0-3 2-4 2-6M18 15c0-3-2-4-2-6" />,
-    <path key="m" d="M12 6a3 3 0 100 6 3 3 0 000-6zM12 3v2M12 19v2M3 12h2M19 12h2M6 6l1.5 1.5M16.5 16.5L18 18M18 6l-1.5 1.5M7.5 16.5L6 18" />,
-    <path key="n" d="M9 18V6l9-2v12M9 18a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0zM18 16a2 2 0 11-4 0 2 2 0 014 0z" />,
-    <path key="w" d="M4 20V9l8-5 8 5v11M9 20v-6h6v6" />,
-    <path key="b" d="M4 8h16l-2 6H6L4 8zM8 14v6M16 14v6M12 4v4" />,
-  ]
+/** Shared ornament shown above every ceremony name. */
+const SEAL_IMAGE = '/media/wedding-logo.jpg'
+
+/** Gold-ringed common motif — same for every event, no label text. */
+function EventSeal() {
   return (
-    <svg
-      viewBox="0 0 24 24"
-      className="size-5 text-accent-foreground"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      {glyphs[index % glyphs.length]}
-    </svg>
+    <span className="relative inline-block size-11 shrink-0 overflow-hidden rounded-full border border-accent/50 bg-card shadow-[0_6px_16px_-10px_oklch(0.45_0.08_240/0.7)]">
+      <Image
+        src={SEAL_IMAGE || '/placeholder.svg'}
+        alt=""
+        fill
+        sizes="44px"
+        aria-hidden="true"
+        className="object-cover"
+      />
+    </span>
   )
 }
 
@@ -297,6 +286,39 @@ function ChipIcon({ kind }: { kind: 'calendar' | 'clock' | 'nav' }) {
   )
 }
 
+/** Muted looping preview that keeps playing at all times — never pauses. */
+function AutoVideo({ video, name }: { video: CelebrationVideo; name: string }) {
+  const ref = useRef<HTMLVideoElement | null>(null)
+
+  useEffect(() => {
+    const el = ref.current
+    if (!el) return
+
+    const keepPlaying = () => {
+      el.play().catch(() => {})
+    }
+
+    keepPlaying()
+    el.addEventListener('pause', keepPlaying)
+    return () => el.removeEventListener('pause', keepPlaying)
+  }, [])
+
+  return (
+    <video
+      ref={ref}
+      src={video.src}
+      poster={video.poster}
+      autoPlay
+      muted
+      loop
+      playsInline
+      preload="auto"
+      aria-label={name}
+      className="absolute inset-0 size-full object-cover transition-transform duration-[900ms] ease-out group-hover/media:scale-[1.08]"
+    />
+  )
+}
+
 function EventRow({
   c,
   index,
@@ -312,32 +334,38 @@ function EventRow({
   const reached = index <= active
 
   const media = (
-    <div className="relative">
-      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[22px] border border-accent/40 bg-card shadow-[0_30px_60px_-34px_oklch(0.45_0.08_240/0.55)]">
-        <Image
-          src={c.image || '/placeholder.svg'}
-          alt={c.name}
-          fill
-          sizes="(max-width: 768px) 88vw, 420px"
-          className="object-cover"
-        />
+    <div className="group/media relative">
+      <div className="relative aspect-[4/3] w-full overflow-hidden rounded-[22px] border border-accent/40 bg-card shadow-[0_30px_60px_-34px_oklch(0.45_0.08_240/0.55)] transition-[transform,box-shadow,border-color] duration-500 ease-out group-hover/media:-translate-y-1.5 group-hover/media:border-accent group-hover/media:shadow-[0_40px_70px_-30px_oklch(0.45_0.08_240/0.65)]">
+        {c.video ? (
+          <AutoVideo video={c.video} name={c.name} />
+        ) : (
+          <Image
+            src={c.image || '/placeholder.svg'}
+            alt={c.name}
+            fill
+            sizes="(max-width: 768px) 88vw, 420px"
+            className="object-cover transition-transform duration-[900ms] ease-out group-hover/media:scale-[1.08]"
+          />
+        )}
+
+        {/* soft gold wash that fades in on hover */}
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-[10px] rounded-[16px] border border-white/40"
+          className="pointer-events-none absolute inset-0 bg-gradient-to-t from-[oklch(0.45_0.06_240/0.45)] via-transparent to-transparent opacity-0 transition-opacity duration-500 group-hover/media:opacity-100"
         />
+        {/* light sweep across the frame on hover */}
+        <span
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-gradient-to-r from-transparent via-[oklch(1_0_0/0.35)] to-transparent transition-transform duration-[900ms] ease-out group-hover/media:translate-x-[420%]"
+        />
+
         {c.video && (
           <button
             type="button"
             onClick={() => onPlay(c.video!)}
             aria-label={`Watch ${c.name}`}
-            className="absolute inset-0 flex items-center justify-center bg-[oklch(0.45_0.06_240/0.28)] transition-colors hover:bg-[oklch(0.45_0.06_240/0.42)]"
-          >
-            <span className="flex size-14 items-center justify-center rounded-full border border-white/70 bg-white/25 backdrop-blur-sm">
-              <svg viewBox="0 0 24 24" className="ml-0.5 size-6 text-white" fill="currentColor" aria-hidden="true">
-                <path d="M8 5l12 7-12 7z" />
-              </svg>
-            </span>
-          </button>
+            className="absolute inset-0 cursor-pointer rounded-[22px] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+          />
         )}
       </div>
     </div>
@@ -345,13 +373,9 @@ function EventRow({
 
   const text = (
     <div className={imageFirst ? 'md:text-left' : 'md:text-right'}>
-      <span
-        className={`inline-flex size-10 items-center justify-center rounded-full border border-accent/45 bg-card/80 ${
-          imageFirst ? '' : 'md:ml-auto'
-        }`}
-      >
-        <EventGlyph index={c.glyph} />
-      </span>
+      <div className={imageFirst ? '' : 'md:flex md:justify-end'}>
+        <EventSeal />
+      </div>
       <h3 className="mt-3 font-serif text-2xl font-light leading-tight text-foreground sm:text-3xl">
         {c.name}
       </h3>
