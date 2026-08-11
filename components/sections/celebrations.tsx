@@ -90,7 +90,7 @@ const celebrations: Celebration[] = [
       { name: 'Cream', hex: '#F6EEDC' },
     ],
     mapQuery: 'Ahmedabad, Gujarat',
-    image: '/media/haldi-ceremory.png',
+    image: '/media/haldi-1.jpeg',
   },
   {
     name: 'Sangeet',
@@ -109,7 +109,7 @@ const celebrations: Celebration[] = [
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/sangeet.png',
     video: {
-      src: '/media/sangit-ceremory.mp4',
+      src: '/media/sangit-ceremony.mp4',
       poster: '/images/celebrations/sangeet.png',
       title: 'Sangeet',
     },
@@ -146,7 +146,7 @@ const celebrations: Celebration[] = [
       { name: 'Cream', hex: '#F3E7D6' },
     ],
     mapQuery: 'Satellite, Ahmedabad, Gujarat',
-    image: '/images/celebrations/hastamelap.png',
+    image: '/images/celebrations/hastmelap-1.jpeg',
   },
   {
     name: 'Reception',
@@ -164,6 +164,11 @@ const celebrations: Celebration[] = [
     ],
     mapQuery: 'Ahmedabad, Gujarat',
     image: '/images/celebrations/reception.png',
+      video: {
+      src: '/media/reception-ceremory.mp4',
+      poster: '/images/celebrations/reception.png',
+      title: 'Reception',
+    },
   },
 ]
 
