@@ -6,7 +6,7 @@ import { LoadingScreen } from '@/components/loading-screen'
 import { LockedInvitation } from '@/components/locked-invitation'
 import { CurtainReveal } from '@/components/curtain-reveal'
 import { ScratchReveal } from '@/components/scratch-reveal'
-import { SiteNav } from '@/components/site-nav'
+// import { SiteNav } from '@/components/site-nav'
 import { MusicControl } from '@/components/music-control'
 import { CoupleReveal } from '@/components/sections/couple-reveal'
 import { DateReveal } from '@/components/sections/date-reveal'
@@ -45,7 +45,7 @@ export function InvitationExperience() {
           transition={{ duration: 1.1, ease: 'easeOut' }}
           className="relative w-full overflow-x-hidden"
         >
-          <SiteNav />
+          {/* <SiteNav /> */}
           <CoupleReveal />
           <DateReveal />
           <Countdown />
