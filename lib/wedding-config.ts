@@ -176,27 +176,27 @@ export const memories: MediaItem[] = [
   },
   // ── 2025 ───────────────────────────────────────────────────
   {
-    id: 'lake-boat-ride',
-    type: 'image',
-    src: '/media/lake-boat-ride.png',
-    title: 'Lake Boat Ride',
-    caption: 'The water was calm, but our hearts were full of excitement.',
-    orientation: 'portrait',
-    year: '2025',
-    month: 9,
-    meta: 'Udaipur Lake · Evening',
-  },
-  // ── 2026 ───────────────────────────────────────────────────
-  {
     id: 'first-dance',
     type: 'image',
     src: '/media/first-dance.png',
     title: 'The First Dance',
     caption: 'Under a thousand candles, the world went quiet.',
     orientation: 'portrait',
-    year: '2026',
+    year: '2025',
     month: 12,
     meta: 'Crystal Ballroom · 11 Dec',
+  },
+  // ── 2026 ───────────────────────────────────────────────────
+   {
+    id: 'lake-boat-ride',
+    type: 'image',
+    src: '/media/lake-boat-ride.png',
+    title: 'Lake Boat Ride',
+    caption: 'The water was calm, but our hearts were full of excitement.',
+    orientation: 'portrait',
+    year: '2026',
+    month: 9,
+    meta: 'Udaipur Lake · Evening',
   },
 ]
 

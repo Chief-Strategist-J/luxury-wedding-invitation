@@ -491,7 +491,7 @@ export function Memories() {
         item={open ? active : null}
         onClose={() => setOpen(false)}
         onPrev={() => go(-1)}
-        onNext={() => go(1)}                                                               
+        onNext={() => go(1)}
       />
     </section>
   )
