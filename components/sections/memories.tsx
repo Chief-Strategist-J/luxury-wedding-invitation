@@ -6,14 +6,22 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { Eyebrow, GoldDivider, Petals } from '@/components/decor'
 import { HeartNavButton } from '@/components/heart-nav-button'
 import { MediaLightbox } from '@/components/media-lightbox'
-import { memories } from '@/lib/wedding-config'
+import { memoryFrames } from '@/lib/wedding-config'
 
-/** Images only in the ring — the video entries stay in wedding-config. */
-const items = memories.filter((m) => m.type === 'image')
+/** Images only in the ring — already sorted year → month in wedding-config,
+ *  so the years always read 2019, 2020, 2021 … 2026 around the ring and
+ *  2019 "First Date" is always the first frame. */
+const items = memoryFrames
 const COUNT = items.length
 const ANGLE = 360 / COUNT
 /** Degrees per second — one slow, never-ending revolution. */
 const SPEED = 7.5
+
+/** How many diamonds are visible at once in the dot rail. */
+const WINDOW = 6
+/** Keep this many diamonds ahead of the active one before the rail slides. */
+const LOOKAHEAD = 1
+const MAX_START = Math.max(0, COUNT - WINDOW)
 
 /** A long perspective keeps the front card from being blown up so much that
  *  it swallows its neighbours on screen. */
@@ -55,6 +63,7 @@ const EDGE_ACTIVE = 'var(--gold)'
 
 export function Memories() {
   const [activeIndex, setActiveIndex] = useState(0)
+  const [railStart, setRailStart] = useState(0)
   const [open, setOpen] = useState(false)
   const [size, setSize] = useState(SIZES.xs)
   const [failed, setFailed] = useState<Record<string, boolean>>({})
@@ -94,6 +103,22 @@ export function Memories() {
   useEffect(() => {
     openRef.current = open
   }, [open])
+
+  /* ── the rail window follows the active frame ───────────────
+     Shows six diamonds; the moment the active one reaches the far end the
+     rail slides one step, so the next diamond appears and the first one
+     disappears (1..6 → 2..7 → 3..8 …). */
+  useEffect(() => {
+    setRailStart((start) => {
+      let next = start
+      if (activeIndex > start + WINDOW - 1 - LOOKAHEAD) {
+        next = activeIndex - WINDOW + 1 + LOOKAHEAD
+      } else if (activeIndex < start + LOOKAHEAD) {
+        next = activeIndex - LOOKAHEAD
+      }
+      return Math.min(MAX_START, Math.max(0, next))
+    })
+  }, [activeIndex])
 
   /* ── the endless spin ──────────────────────────────────────── */
   useEffect(() => {
@@ -194,6 +219,10 @@ export function Memories() {
     holdRef.current = false
   }
 
+  const visible = items
+    .map((m, i) => ({ m, i }))
+    .slice(railStart, railStart + WINDOW)
+
   return (
     <section
       id="memories"
@@ -214,7 +243,9 @@ export function Memories() {
           </h2>
           <GoldDivider className="mt-5 justify-center" />
           <p className="mx-auto mt-5 max-w-sm text-pretty text-sm leading-relaxed text-muted-foreground sm:max-w-md">
-            Together, we've created countless beautiful memories that have led us to this special day. We are delighted to share the beginning of our forever with you.
+            Together, we&apos;ve created countless beautiful memories that have
+            led us to this special day. We are delighted to share the beginning
+            of our forever with you.
           </p>
         </header>
 
@@ -231,7 +262,7 @@ export function Memories() {
           onPointerMove={onPointerMove}
           onPointerUp={onPointerUp}
           onPointerCancel={onPointerUp}
-          className="relative mt-24 cursor-grab touch-pan-y select-none outline-none active:cursor-grabbing sm:mt-32 lg:mt-36"
+          className="relative mt-16 cursor-grab touch-pan-y select-none outline-none active:cursor-grabbing sm:mt-24 lg:mt-28"
           style={{ height: size.stage, perspective: PERSPECTIVE }}
         >
           {/* stage floor glow */}
@@ -408,28 +439,38 @@ export function Memories() {
         </div>
 
         {/* ── controls ─────────────────────────────────────────── */}
-        <div className="mt-8 flex items-center justify-center gap-5 sm:gap-6">
+        <div className="mt-8 flex items-center justify-center gap-4 sm:gap-6">
           <HeartNavButton
             label="Previous memory"
             onClick={() => go(-1)}
             dir="left"
           />
 
-          <ul className="flex items-center gap-2.5 sm:gap-3">
-            {items.map((m, i) => (
-              <li key={m.id}>
-                <button
-                  type="button"
-                  onClick={() => goTo(i)}
-                  aria-label={`Show ${m.title}`}
-                  className={`block rotate-45 transition-all duration-500 ${
-                    activeIndex === i
-                      ? 'size-2 bg-accent'
-                      : 'size-1.5 bg-accent/30 hover:bg-accent/60'
-                  }`}
-                />
-              </li>
-            ))}
+          {/* windowed diamond rail — six at a time, sliding one by one */}
+          <ul className="flex items-center gap-3 sm:gap-4">
+            {visible.map(({ m, i }) => {
+              const isActive = activeIndex === i
+              return (
+                <li key={m.id} className="flex items-center">
+                  <button
+                    type="button"
+                    onClick={() => goTo(i)}
+                    aria-label={`Show ${m.title}`}
+                    aria-current={isActive ? 'true' : undefined}
+                    className="flex size-4 items-center justify-center"
+                  >
+                    <span
+                      aria-hidden="true"
+                      className={`block rotate-45 transition-all duration-500 ${
+                        isActive
+                          ? 'size-2.5 bg-accent shadow-[0_0_0_4px_oklch(0.86_0.09_85/0.18)]'
+                          : 'size-1.5 bg-accent/30 hover:bg-accent/60'
+                      }`}
+                    />
+                  </button>
+                </li>
+              )
+            })}
           </ul>
 
           <HeartNavButton label="Next memory" onClick={() => go(1)} dir="right" />
@@ -450,7 +491,7 @@ export function Memories() {
         item={open ? active : null}
         onClose={() => setOpen(false)}
         onPrev={() => go(-1)}
-        onNext={() => go(1)}
+        onNext={() => go(1)}                                                               
       />
     </section>
   )
