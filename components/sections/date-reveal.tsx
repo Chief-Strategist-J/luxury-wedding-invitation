@@ -2,7 +2,7 @@
 
 import { motion } from 'motion/react'
 import { Eyebrow, GoldDivider, Petals, Sparkles } from '@/components/decor'
-import { weddingDateParts } from '@/lib/wedding-config'
+import { weddingDateParts, weddingTimeLine } from '@/lib/wedding-config'
 
 export function DateReveal() {
   const parts = [
@@ -82,7 +82,7 @@ export function DateReveal() {
           viewport={{ once: true }}
           transition={{ delay: 1.1, duration: 1 }}
         >
-          {weddingDateParts.weekday} &middot; 7:00 PM Onwards
+          {weddingDateParts.weekday} &middot; {weddingTimeLine} Onwards
         </motion.p>
       </div>
     </section>

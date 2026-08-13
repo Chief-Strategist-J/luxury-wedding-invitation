@@ -21,8 +21,8 @@ export const wedding = {
 
   hashtag: '#AriaraKiShaadi',
 
-  /** The ONE date that powers the date reveal + countdown. */
-  date: '2026-12-12T19:00:00+05:30',
+  /** The ONE date + time that powers the date reveal + countdown. */
+  date: '2026-12-12T21:00:00+05:30',
 
   venue: {
     name: 'The Leela Palace Gardens',
@@ -47,6 +47,13 @@ export const weddingDateParts = {
 }
 
 export const weddingDateLine = `${weddingDateParts.day} ${weddingDateParts.month} ${weddingDateParts.year}`
+
+/** Derives the time (e.g. "9:00 PM") straight from wedding.date — stays in sync automatically. */
+export const weddingTimeLine = d.toLocaleString('en-US', {
+  hour: 'numeric',
+  minute: '2-digit',
+  hour12: true,
+})
 
 // ── Media ────────────────────────────────────────────────────
 export type MediaItem = {
