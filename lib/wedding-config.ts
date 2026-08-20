@@ -1,8 +1,3 @@
-const chapter1 = '/media/chapter-1.png'
-const chapter2 = '/media/chapter-2.png'
-const chapter3 = '/media/chapter-3.png'
-const chapter4 = '/media/chapter-4.png'
-
 // ─────────────────────────────────────────────────────────────
 // Single source of truth for the whole invitation.
 // Change values here and the entire website updates.
@@ -72,7 +67,15 @@ export type MediaItem = {
   /** Month (1-12) inside the year — used only to sort memories. */
   month?: number
 }
-
+export type StoryChapter = {
+  /** short caption shown on the timeline and under the photo */
+  label: string
+  /** one-line note that appears while the chapter is zoomed in */
+  note: string
+  /** the year / month the moment happened */
+  when: string
+  image: string
+}
 /**
  * Story timeline — kept in strict chronological order, one year after the
  * other (2019 → 2026) with at most two memories inside a single year.
@@ -230,9 +233,39 @@ export const memoryYears: string[] = Array.from(
 // ── Story ────────────────────────────────────────────────────
 // The story copy is already baked into /media/chapter-1..4.png,
 // so only the image list lives here (used for the stacked scroll).
-export const storyChapters = [
-  { image: chapter1, label: 'A Beautiful Beginning' },
-  { image: chapter2, label: 'Two Hearts, One Journey' },
-  { image: chapter3, label: 'When Families Become One' },
-  { image: chapter4, label: 'The Beginning of Forever' },
+export const storyChapters: StoryChapter[] = [
+  {
+    label: 'Where It All Began',
+    note: 'One little moment, one simple hello — and somehow, the beginning of a beautiful love story.',
+    when: 'Chapter 01',
+    image: '/media/chapter-1.png',
+  },
+
+  {
+    label: 'A Little More Than Friendship',
+    note: 'Countless conversations, shared smiles, and the quiet realization that we were becoming something more.',
+    when: 'Chapter 02',
+    image: '/media/chapter-2.png',
+  },
+
+  {
+    label: 'Growing Together',
+    note: 'Through every adventure, every laugh, and every unforgettable moment, we found our way closer to each other.',
+    when: 'Chapter 03',
+    image: '/media/chapter-3.png',
+  },
+
+  {
+    label: 'The Moment We Knew',
+    note: 'Among a thousand moments, there was one that made forever feel like the easiest answer.',
+    when: 'Chapter 04',
+    image: '/media/chapter-4.png',
+  },
+
+  {
+    label: 'And So, Forever',
+    note: 'Two hearts, two families, and one beautiful beginning — today, our forever finally starts.',
+    when: 'Chapter 05',
+    image: '/media/chapter-5.png',
+  },
 ] as const

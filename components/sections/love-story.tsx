@@ -3,12 +3,13 @@
 import {
   motion,
   useMotionValueEvent,
+  useReducedMotion,
   useScroll,
   useTransform,
   type MotionValue,
 } from 'motion/react'
 import Image from 'next/image'
-import { useEffect, useRef, useState, type RefObject } from 'react'
+import { useCallback, useEffect, useRef, useState, type RefObject } from 'react'
 import {
   Eyebrow,
   GoldDivider,
@@ -52,26 +53,43 @@ function useDeckMetrics(container: RefObject<HTMLDivElement | null>): DeckMetric
   })
 
   useEffect(() => {
+    const node = container.current
+    if (!node) return
+
+    let frame = 0
     const read = () => {
-      const node = container.current
-      if (!node) return
-      const vh = window.innerHeight
-      const height = node.offsetHeight
-      setMetrics({
-        vh,
-        panel: height / TOTAL,
-        distance: Math.max(height - vh, 1),
+      cancelAnimationFrame(frame)
+      /* Batch reads into one frame: ResizeObserver + resize + orientation can
+         all fire together and each one triggers a layout read. */
+      frame = requestAnimationFrame(() => {
+        const el = container.current
+        if (!el) return
+        const vh = window.innerHeight
+        const height = el.offsetHeight
+        const next: DeckMetrics = {
+          vh,
+          panel: height / TOTAL,
+          distance: Math.max(height - vh, 1),
+        }
+        setMetrics((prev) =>
+          prev.vh === next.vh &&
+          prev.panel === next.panel &&
+          prev.distance === next.distance
+            ? prev
+            : next,
+        )
       })
     }
 
     read()
 
     const observer = new ResizeObserver(read)
-    if (container.current) observer.observe(container.current)
+    observer.observe(node)
     window.addEventListener('resize', read)
     window.addEventListener('orientationchange', read)
 
     return () => {
+      cancelAnimationFrame(frame)
       observer.disconnect()
       window.removeEventListener('resize', read)
       window.removeEventListener('orientationchange', read)
@@ -109,38 +127,107 @@ function StackedPanel({
   active: number
   metrics: DeckMetrics
 }) {
+  const reduceMotion = useReducedMotion()
   const pin = useDeckPin(progress, metrics, index)
-  const y = useTransform(pin, (v) => v + index * PEEK)
 
   /* every panel above shrinks this one a little further */
   const stacked = (TOTAL - 1 - index) * SCALE_STEP
   const start = index / TOTAL
-  const scale = useTransform(progress, [start, 1], [1, 1 - stacked])
+  const step = 1 / TOTAL
+  /* window in which this card is arriving (zooming in) */
+  const enterFrom = Math.max(start - step, 0)
+
+  const stackScale = useTransform(progress, [start, 1], [1, 1 - stacked])
+  /* Zoom-on-scroll: the card grows from 0.82 to 1 as it slides into the deck. */
+  const zoomIn = useTransform(
+    progress,
+    [enterFrom, start],
+    [reduceMotion || index === 0 ? 1 : 0.82, 1],
+    { clamp: true },
+  )
+  const scale = useTransform([stackScale, zoomIn], ([s, z]: number[]) => s * z)
+
+  /* it also rises and fades in slightly while zooming */
+  const enterY = useTransform(
+    progress,
+    [enterFrom, start],
+    [reduceMotion || index === 0 ? 0 : 60, 0],
+    { clamp: true },
+  )
+  const y = useTransform([pin, enterY], ([p, e]: number[]) => p + e + index * PEEK)
+
+  const opacity = useTransform(
+    progress,
+    [enterFrom, enterFrom + step * 0.55],
+    [reduceMotion || index === 0 ? 1 : 0, 1],
+    { clamp: true },
+  )
+  const rotate = useTransform(
+    progress,
+    [enterFrom, start],
+    [reduceMotion || index === 0 ? 0 : -2.5, 0],
+    { clamp: true },
+  )
+
   const brightness = useTransform(
     progress,
-    [start, Math.min(start + 1 / TOTAL, 1)],
+    [start, Math.min(start + step, 1)],
     index === TOTAL - 1 ? [1, 1] : [1, 0.9],
   )
-  const filter = useTransform(brightness, (b) => `brightness(${b})`)
+  const blurAmount = useTransform(
+    progress,
+    [enterFrom, start, Math.min(start + step, 1)],
+    [reduceMotion || index === 0 ? 0 : 6, 0, index === TOTAL - 1 ? 0 : 1.5],
+    { clamp: true },
+  )
+  const filter = useTransform(
+    [brightness, blurAmount],
+    ([b, bl]: number[]) => `brightness(${b}) blur(${bl}px)`,
+  )
+
+  /* Slow Ken-Burns zoom on the photo itself across the card's whole life. */
+  const imageScale = useTransform(
+    progress,
+    [enterFrom, Math.min(start + step, 1)],
+    reduceMotion ? [1, 1] : [1.14, 1],
+    { clamp: true },
+  )
 
   const isActive = index === active
+  /* Only the top few cards need compositor layers; keeping `willChange` on
+     every card at once is what makes long decks stutter on mobile. */
+  const near = Math.abs(index - active) <= 1
 
   return (
     <div className="flex h-[100dvh] items-center justify-center px-4 pb-16 pt-52 sm:pt-56 lg:pb-24 lg:pt-32">
       <motion.div
-        style={{ y, scale, filter, willChange: 'transform' }}
+        style={{
+          y,
+          scale,
+          rotate,
+          opacity,
+          filter,
+          zIndex: index,
+          willChange: near ? 'transform, opacity, filter' : 'auto',
+        }}
         className="relative w-full max-w-[300px] origin-top sm:max-w-[340px] lg:max-w-[370px]"
       >
         <div className="relative rounded-[26px] border border-accent/40 bg-card p-3 shadow-[0_36px_80px_-38px_oklch(0.45_0.08_240/0.55)]">
           <div className="relative aspect-[4/5] max-h-[46dvh] w-full overflow-hidden rounded-[18px] bg-card lg:max-h-[52dvh]">
-            <Image
-              src={image || '/placeholder.svg'}
-              alt={label}
-              fill
-              sizes="(max-width: 640px) 86vw, 400px"
-              className="object-contain"
-              priority={index === 0}
-            />
+            <motion.div
+              style={{ scale: imageScale, willChange: near ? 'transform' : 'auto' }}
+              className="absolute inset-0"
+            >
+              <Image
+                src={image || '/placeholder.svg'}
+                alt={label}
+                fill
+                sizes="(max-width: 640px) 86vw, 400px"
+                className="object-contain"
+                priority={index === 0}
+                loading={index === 0 ? undefined : 'lazy'}
+              />
+            </motion.div>
           </div>
           <span
             aria-hidden="true"
@@ -191,7 +278,7 @@ function HeartTimeline({
         }}
         className="flex h-[100dvh] items-center pt-24 sm:pt-28"
       >
-        <div className="relative flex flex-col justify-center gap-12">
+        <ol className="relative flex flex-col justify-center gap-12">
           <span
             aria-hidden="true"
             className="absolute bottom-6 left-[18px] top-6 w-[2px] rounded-full bg-accent/20"
@@ -204,9 +291,14 @@ function HeartTimeline({
 
           {storyChapters.map((c, i) => {
             const reached = i <= active
+            const isActive = i === active
             return (
-              <div key={c.label} className="relative flex items-center gap-5">
-                <HeartMark filled={reached} active={i === active} />
+              <li
+                key={c.label}
+                aria-current={isActive ? 'step' : undefined}
+                className="relative flex items-center gap-5"
+              >
+                <HeartMark filled={reached} active={isActive} />
                 <div>
                   <p
                     className={`font-serif text-xs tracking-[0.28em] transition-colors duration-500 ${
@@ -217,7 +309,7 @@ function HeartTimeline({
                   </p>
                   <p
                     className={`mt-1 max-w-[15rem] text-pretty font-serif text-lg leading-snug transition-all duration-500 xl:text-xl ${
-                      i === active
+                      isActive
                         ? 'italic text-foreground'
                         : reached
                           ? 'text-foreground/70'
@@ -226,11 +318,22 @@ function HeartTimeline({
                   >
                     {c.label}
                   </p>
+                  {/* the one-line note from wedding-config, only for the chapter
+                      currently on top of the deck */}
+                  <p
+                    className={`max-w-[15rem] text-pretty font-serif text-[0.8rem] italic leading-relaxed text-muted-foreground transition-all duration-500 ${
+                      isActive
+                        ? 'mt-2 max-h-24 opacity-100'
+                        : 'mt-0 max-h-0 overflow-hidden opacity-0'
+                    }`}
+                  >
+                    {c.note}
+                  </p>
                 </div>
-              </div>
+              </li>
             )
           })}
-        </div>
+        </ol>
       </motion.div>
     </div>
   )
@@ -267,7 +370,10 @@ function HeartRailMobile({
           </span>
         ))}
       </div>
-      <p className="font-serif text-[0.7rem] italic tracking-[0.22em] text-accent-foreground">
+      <p
+        aria-live="polite"
+        className="font-serif text-[0.7rem] italic tracking-[0.22em] text-accent-foreground"
+      >
         Chapter {active + 1} of {TOTAL}
       </p>
     </div>
@@ -305,6 +411,7 @@ function StoryHeading({
 export function LoveStory() {
   const container = useRef<HTMLDivElement | null>(null)
   const metrics = useDeckMetrics(container)
+  const reduceMotion = useReducedMotion()
 
   const { scrollYProgress } = useScroll({
     target: container,
@@ -312,17 +419,30 @@ export function LoveStory() {
   })
 
   const [active, setActive] = useState(0)
-  useMotionValueEvent(scrollYProgress, 'change', (p) => {
-    if (!metrics.panel) return
-    const scrolled = p * metrics.distance
-    setActive(clamp(Math.round(scrolled / metrics.panel), 0, TOTAL - 1))
-  })
+
+  const sync = useCallback(
+    (p: number) => {
+      if (!metrics.panel) return
+      const scrolled = p * metrics.distance
+      const next = clamp(Math.round(scrolled / metrics.panel), 0, TOTAL - 1)
+      setActive((prev) => (prev === next ? prev : next))
+    },
+    [metrics.panel, metrics.distance],
+  )
+
+  useMotionValueEvent(scrollYProgress, 'change', sync)
+
+  /* Re-sync after mount / resize / restored scroll position, otherwise the
+     rail stays on chapter 1 when the page loads mid-section. */
+  useEffect(() => {
+    sync(scrollYProgress.get())
+  }, [sync, scrollYProgress])
 
   return (
     <SectionShell
       id="story"
       className="overflow-visible !py-0"
-      background={<Sparkles count={10} />}
+      background={<Sparkles count={reduceMotion ? 0 : 10} />}
     >
       <div ref={container} className="relative">
         <StoryHeading
@@ -333,7 +453,7 @@ export function LoveStory() {
 
         <div className="grid lg:grid-cols-[minmax(0,1fr)_minmax(0,0.9fr)] lg:items-start lg:gap-10">
           <div className="relative">
-            <Sparkles count={10} className="opacity-60" />
+            <Sparkles count={reduceMotion ? 0 : 10} className="opacity-60" />
             {storyChapters.map((c, i) => (
               <StackedPanel
                 key={c.label}
