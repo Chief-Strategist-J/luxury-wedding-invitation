@@ -23,14 +23,18 @@ const TOTAL = storyChapters.length
 
 /* How much each panel shrinks for every panel that stacks on top of it, and
    how far down the next panel sits so the one beneath still peeks out. */
-const SCALE_STEP = 0.05
-const PEEK = 16
+const TUNING = {
+  mobile: { scaleStep: 0.035, peek: 10, imageZoom: 1.32 },
+  desktop: { scaleStep: 0.05, peek: 16, imageZoom: 1.6 },
+} as const
 
 function clamp(v: number, min: number, max: number) {
   return Math.min(Math.max(v, min), max)
 }
 
 type DeckMetrics = {
+  /** true once the layout is at the `lg` breakpoint (matches Tailwind's 1024px) */
+  desktop: boolean
   /** real viewport height in px (the unit `scrollYProgress` is measured in) */
   vh: number
   /** measured height of ONE panel in px */
@@ -47,6 +51,7 @@ type DeckMetrics = {
    Measuring the deck instead keeps the math exact in every browser. */
 function useDeckMetrics(container: RefObject<HTMLDivElement | null>): DeckMetrics {
   const [metrics, setMetrics] = useState<DeckMetrics>({
+    desktop: false,
     vh: 0,
     panel: 0,
     distance: 0,
@@ -67,11 +72,13 @@ function useDeckMetrics(container: RefObject<HTMLDivElement | null>): DeckMetric
         const vh = window.innerHeight
         const height = el.offsetHeight
         const next: DeckMetrics = {
+          desktop: window.innerWidth >= 1024,
           vh,
           panel: height / TOTAL,
           distance: Math.max(height - vh, 1),
         }
         setMetrics((prev) =>
+          prev.desktop === next.desktop &&
           prev.vh === next.vh &&
           prev.panel === next.panel &&
           prev.distance === next.distance
@@ -130,67 +137,46 @@ function StackedPanel({
   const reduceMotion = useReducedMotion()
   const pin = useDeckPin(progress, metrics, index)
 
-  /* every panel above shrinks this one a little further */
-  const stacked = (TOTAL - 1 - index) * SCALE_STEP
+  /* Phones get a gentler stack: less shrink, a smaller peek and a softer photo
+     zoom, so the cards stay readable on a narrow screen while desktop keeps the
+     full dramatic stacked-zoom. Both run the exact same scroll logic. */
+  const { scaleStep, peek, imageZoom } = metrics.desktop
+    ? TUNING.desktop
+    : TUNING.mobile
+
   const start = index / TOTAL
   const step = 1 / TOTAL
-  /* window in which this card is arriving (zooming in) */
+  /* the window in which this card travels up into the deck */
   const enterFrom = Math.max(start - step, 0)
 
-  const stackScale = useTransform(progress, [start, 1], [1, 1 - stacked])
-  /* Zoom-on-scroll: the card grows from 0.82 to 1 as it slides into the deck. */
-  const zoomIn = useTransform(
+  /* ---- the classic framer-motion stacked-card zoom -------------------
+     Each card is pinned once it reaches the top of the deck, then shrinks
+     to its own target scale as every following card scrolls over it. The
+     card that ends up on top stays at 1, the one under it at 0.95, etc. */
+  const targetScale = 1 - (TOTAL - 1 - index) * scaleStep
+  const scale = useTransform(
     progress,
-    [enterFrom, start],
-    [reduceMotion || index === 0 ? 1 : 0.82, 1],
-    { clamp: true },
-  )
-  const scale = useTransform([stackScale, zoomIn], ([s, z]: number[]) => s * z)
-
-  /* it also rises and fades in slightly while zooming */
-  const enterY = useTransform(
-    progress,
-    [enterFrom, start],
-    [reduceMotion || index === 0 ? 0 : 60, 0],
-    { clamp: true },
-  )
-  const y = useTransform([pin, enterY], ([p, e]: number[]) => p + e + index * PEEK)
-
-  const opacity = useTransform(
-    progress,
-    [enterFrom, enterFrom + step * 0.55],
-    [reduceMotion || index === 0 ? 1 : 0, 1],
-    { clamp: true },
-  )
-  const rotate = useTransform(
-    progress,
-    [enterFrom, start],
-    [reduceMotion || index === 0 ? 0 : -2.5, 0],
+    [start, 1],
+    reduceMotion ? [targetScale, targetScale] : [1, targetScale],
     { clamp: true },
   )
 
-  const brightness = useTransform(
-    progress,
-    [start, Math.min(start + step, 1)],
-    index === TOTAL - 1 ? [1, 1] : [1, 0.9],
-  )
-  const blurAmount = useTransform(
-    progress,
-    [enterFrom, start, Math.min(start + step, 1)],
-    [reduceMotion || index === 0 ? 0 : 6, 0, index === TOTAL - 1 ? 0 : 1.5],
-    { clamp: true },
-  )
-  const filter = useTransform(
-    [brightness, blurAmount],
-    ([b, bl]: number[]) => `brightness(${b}) blur(${bl}px)`,
-  )
+  const y = useTransform(pin, (p) => p + index * peek)
 
-  /* Slow Ken-Burns zoom on the photo itself across the card's whole life. */
+  /* the photo zooms out from a strong close-up to its natural framing while
+     the card is scrolling into place — the "zoom on scroll" itself */
   const imageScale = useTransform(
     progress,
-    [enterFrom, Math.min(start + step, 1)],
-    reduceMotion ? [1, 1] : [1.14, 1],
+    [enterFrom, start],
+    reduceMotion || index === 0 ? [1, 1] : [imageZoom, 1],
     { clamp: true },
+  )
+
+  /* cards that are buried dim slightly so the top one reads first */
+  const filter = useTransform(
+    progress,
+    [start, Math.min(start + step, 1)],
+    index === TOTAL - 1 ? ['brightness(1)', 'brightness(1)'] : ['brightness(1)', 'brightness(0.92)'],
   )
 
   const isActive = index === active
@@ -204,11 +190,9 @@ function StackedPanel({
         style={{
           y,
           scale,
-          rotate,
-          opacity,
           filter,
           zIndex: index,
-          willChange: near ? 'transform, opacity, filter' : 'auto',
+          willChange: near ? 'transform, filter' : 'auto',
         }}
         className="relative w-full max-w-[300px] origin-top sm:max-w-[340px] lg:max-w-[370px]"
       >
@@ -218,12 +202,13 @@ function StackedPanel({
               style={{ scale: imageScale, willChange: near ? 'transform' : 'auto' }}
               className="absolute inset-0"
             >
+
               <Image
                 src={image || '/placeholder.svg'}
                 alt={label}
                 fill
                 sizes="(max-width: 640px) 86vw, 400px"
-                className="object-contain"
+                className="object-cover object-center"
                 priority={index === 0}
                 loading={index === 0 ? undefined : 'lazy'}
               />
