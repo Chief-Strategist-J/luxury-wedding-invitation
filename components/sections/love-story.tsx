@@ -21,8 +21,6 @@ import { storyChapters } from '@/lib/wedding-config'
 
 const TOTAL = storyChapters.length
 
-/* How much each panel shrinks for every panel that stacks on top of it, and
-   how far down the next panel sits so the one beneath still peeks out. */
 const TUNING = {
   mobile: { scaleStep: 0.035, peek: 10, imageZoom: 1.32 },
   desktop: { scaleStep: 0.05, peek: 16, imageZoom: 1.6 },
@@ -33,22 +31,12 @@ function clamp(v: number, min: number, max: number) {
 }
 
 type DeckMetrics = {
-  /** true once the layout is at the `lg` breakpoint (matches Tailwind's 1024px) */
   desktop: boolean
-  /** real viewport height in px (the unit `scrollYProgress` is measured in) */
   vh: number
-  /** measured height of ONE panel in px */
   panel: number
-  /** total px the page scrolls between progress 0 and 1 */
   distance: number
 }
 
-/* The panels are laid out in `dvh`, but scroll offsets are reported in px
-   against the LAYOUT viewport. On mobile those two units differ (the URL bar
-   changes `dvh` but not `innerHeight`), so assuming `panel === innerHeight`
-   made every pinned element drift upward as you scrolled — the heart line
-   ended up floating above the photo instead of staying under it.
-   Measuring the deck instead keeps the math exact in every browser. */
 function useDeckMetrics(container: RefObject<HTMLDivElement | null>): DeckMetrics {
   const [metrics, setMetrics] = useState<DeckMetrics>({
     desktop: false,
@@ -64,8 +52,6 @@ function useDeckMetrics(container: RefObject<HTMLDivElement | null>): DeckMetric
     let frame = 0
     const read = () => {
       cancelAnimationFrame(frame)
-      /* Batch reads into one frame: ResizeObserver + resize + orientation can
-         all fire together and each one triggers a layout read. */
       frame = requestAnimationFrame(() => {
         const el = container.current
         if (!el) return
@@ -106,10 +92,6 @@ function useDeckMetrics(container: RefObject<HTMLDivElement | null>): DeckMetric
   return metrics
 }
 
-/* Translate an element DOWN by exactly the distance the page has scrolled so
-   it behaves like `position: sticky` — but with transforms, which no ancestor
-   `overflow` rule can disable. Panel `index` only starts holding still once it
-   has become the top card of the deck. */
 function useDeckPin(progress: MotionValue<number>, m: DeckMetrics, index = 0) {
   return useTransform(progress, (p) => {
     if (!m.distance || !m.panel) return 0
@@ -137,22 +119,14 @@ function StackedPanel({
   const reduceMotion = useReducedMotion()
   const pin = useDeckPin(progress, metrics, index)
 
-  /* Phones get a gentler stack: less shrink, a smaller peek and a softer photo
-     zoom, so the cards stay readable on a narrow screen while desktop keeps the
-     full dramatic stacked-zoom. Both run the exact same scroll logic. */
   const { scaleStep, peek, imageZoom } = metrics.desktop
     ? TUNING.desktop
     : TUNING.mobile
 
   const start = index / TOTAL
   const step = 1 / TOTAL
-  /* the window in which this card travels up into the deck */
   const enterFrom = Math.max(start - step, 0)
 
-  /* ---- the classic framer-motion stacked-card zoom -------------------
-     Each card is pinned once it reaches the top of the deck, then shrinks
-     to its own target scale as every following card scrolls over it. The
-     card that ends up on top stays at 1, the one under it at 0.95, etc. */
   const targetScale = 1 - (TOTAL - 1 - index) * scaleStep
   const scale = useTransform(
     progress,
@@ -163,8 +137,6 @@ function StackedPanel({
 
   const y = useTransform(pin, (p) => p + index * peek)
 
-  /* the photo zooms out from a strong close-up to its natural framing while
-     the card is scrolling into place — the "zoom on scroll" itself */
   const imageScale = useTransform(
     progress,
     [enterFrom, start],
@@ -172,7 +144,6 @@ function StackedPanel({
     { clamp: true },
   )
 
-  /* cards that are buried dim slightly so the top one reads first */
   const filter = useTransform(
     progress,
     [start, Math.min(start + step, 1)],
@@ -180,8 +151,6 @@ function StackedPanel({
   )
 
   const isActive = index === active
-  /* Only the top few cards need compositor layers; keeping `willChange` on
-     every card at once is what makes long decks stutter on mobile. */
   const near = Math.abs(index - active) <= 1
 
   return (
@@ -192,17 +161,23 @@ function StackedPanel({
           scale,
           filter,
           zIndex: index,
-          willChange: near ? 'transform, filter' : 'auto',
+          transformTemplate: ({ y, scale }: { y: string; scale: string }) =>
+            `translate3d(0, ${y}, 0) scale(${scale})`,
+          willChange: 'transform, filter',
         }}
         className="relative w-full max-w-[300px] origin-top sm:max-w-[340px] lg:max-w-[370px]"
       >
         <div className="relative rounded-[26px] border border-accent/40 bg-card p-3 shadow-[0_36px_80px_-38px_oklch(0.45_0.08_240/0.55)]">
           <div className="relative aspect-[4/5] max-h-[46dvh] w-full overflow-hidden rounded-[18px] bg-card lg:max-h-[52dvh]">
             <motion.div
-              style={{ scale: imageScale, willChange: near ? 'transform' : 'auto' }}
+              style={{
+                scale: imageScale,
+                transformTemplate: ({ scale }: { scale: string }) =>
+                  `translate3d(0, 0, 0) scale(${scale})`,
+                willChange: 'transform',
+              }}
               className="absolute inset-0"
             >
-
               <Image
                 src={image || '/placeholder.svg'}
                 alt={label}
@@ -219,6 +194,7 @@ function StackedPanel({
             className="pointer-events-none absolute inset-[10px] rounded-[20px] border border-accent/25"
           />
         </div>
+
 
         <span
           className={`absolute -top-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-accent/50 bg-card px-4 py-1 font-serif text-xs italic text-accent-foreground shadow-sm transition-opacity duration-500 ${
@@ -239,8 +215,6 @@ function StackedPanel({
   )
 }
 
-/* Desktop: gold rail with a heart per chapter. The rail fills and each heart
-   turns solid gold as its chapter reaches the top of the deck. */
 function HeartTimeline({
   progress,
   active,
@@ -303,8 +277,6 @@ function HeartTimeline({
                   >
                     {c.label}
                   </p>
-                  {/* the one-line note from wedding-config, only for the chapter
-                      currently on top of the deck */}
                   <p
                     className={`max-w-[15rem] text-pretty font-serif text-[0.8rem] italic leading-relaxed text-muted-foreground transition-all duration-500 ${
                       isActive
@@ -324,10 +296,6 @@ function HeartTimeline({
   )
 }
 
-/* Mobile / tablet: the horizontal heart rail. It is NOT pinned on its own any
-   more — it rides inside the pinned "Our Story" header, directly under the gold
-   divider, so it reads as part of the heading instead of floating over the
-   bottom of the photo. */
 function HeartRailMobile({
   progress,
   active,
@@ -365,8 +333,6 @@ function HeartRailMobile({
   )
 }
 
-/* The "Our Story" heading, pinned with the same transform technique. On small
-   screens it also carries the heart rail underneath the gold divider. */
 function StoryHeading({
   progress,
   active,
@@ -417,8 +383,6 @@ export function LoveStory() {
 
   useMotionValueEvent(scrollYProgress, 'change', sync)
 
-  /* Re-sync after mount / resize / restored scroll position, otherwise the
-     rail stays on chapter 1 when the page loads mid-section. */
   useEffect(() => {
     sync(scrollYProgress.get())
   }, [sync, scrollYProgress])
@@ -429,7 +393,11 @@ export function LoveStory() {
       className="overflow-visible !py-0"
       background={<Sparkles count={reduceMotion ? 0 : 10} />}
     >
-      <div ref={container} className="relative">
+      <div
+        ref={container}
+        className="relative"
+        style={{ height: `${TOTAL * 100}vh` }}
+      >
         <StoryHeading
           progress={scrollYProgress}
           active={active}
@@ -462,3 +430,6 @@ export function LoveStory() {
     </SectionShell>
   )
 }
+
+
+
