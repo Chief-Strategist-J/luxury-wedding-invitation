@@ -1,6 +1,7 @@
 import { Analytics } from '@vercel/analytics/next'
 import type { Metadata, Viewport } from 'next'
 import { Cormorant_Garamond, Jost } from 'next/font/google'
+import { SmoothScrollProvider } from '@/components/smooth-scroll-provider'
 import './globals.css'
 
 const _cormorant = Cormorant_Garamond({
@@ -55,11 +56,13 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" className="bg-background">
-      <body className="bg-background text-foreground antialiased">
-        {children}
-        {process.env.NODE_ENV === 'production' && <Analytics />}
-      </body>
-    </html>
+    <SmoothScrollProvider>
+      <html lang="en" className="bg-background">
+        <body className="bg-background text-foreground antialiased">
+          {children}
+          {process.env.NODE_ENV === 'production' && <Analytics />}
+        </body>
+      </html>
+    </SmoothScrollProvider>
   )
 }
